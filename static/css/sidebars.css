@@ -15,7 +15,22 @@ main {
   overflow-y: hidden;
 }
 
-.dropdown-toggle { outline: 0; }
+/* Basic styles for the sidebar header */
+.sidebar-header {
+  display: flex; /* Ensures the children are aligned in a row */
+  align-items: center; /* Vertically centers the items */
+  padding: 1rem; /* Adjust padding as needed */
+  text-decoration: none; /* Remove underline from link */
+  border-bottom: 1px solid #ccc; /* Example border */
+}
+
+/* Style for the SVG icon */
+.sidebar-header svg {
+  margin-left: auto; /* Pushes the SVG to the right */
+  width: 24px;
+  height: 24px;
+  fill: currentColor; /* Uses the color of the text */
+}
 
 .btn-toggle {
   padding: .25rem .5rem;
@@ -96,6 +111,11 @@ main {
   fill: currentColor;
 }
 
+.bi-plus-lg {
+  position: relative;
+  right: 0;
+}
+
 .nav-scroller {
   position: relative;
   z-index: 2;
@@ -137,4 +157,50 @@ main {
 
 .bd-mode-toggle .dropdown-menu .active .bi {
   display: block !important;
+}
+
+
+/* Basic styles for the sidebar header */
+.sidebar-header {
+  display: flex; /* Ensures the children are aligned in a row */
+  align-items: center; /* Vertically centers the items */
+  padding: 1rem; /* Adjust padding as needed */
+  text-decoration: none; /* Remove underline from link */
+  border-bottom: 1px solid #ccc; /* Example border */
+}
+
+/* Style for the SVG icon */
+.sidebar-header svg {
+  margin-left: auto; /* Pushes the SVG to the right */
+  width: 24px;
+  height: 24px;
+  fill: currentColor; /* Uses the color of the text */
+}
+
+/* Modal styles */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+.modal-sheet .modal-dialog {
+  transition: bottom .75s ease-in-out;
+}
+.modal-sheet .modal-footer {
+  padding-bottom: 2rem;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
 }
