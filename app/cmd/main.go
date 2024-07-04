@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"home-server/internal/db"
 	"home-server/internal/models"
@@ -9,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func setupRouter() *gin.Engine {
+func setupRouter(db *sql.DB) *gin.Engine {
 	// disable console color
 	// gin.DisableConsoleColor()
 	r := gin.Default()
@@ -33,6 +34,8 @@ func setupRouter() *gin.Engine {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		fmt.Println("creating user...")
+		models.CreateUser(newUser, db)
 
 		// for now, just respond with the user data
 		c.JSON(http.StatusOK, gin.H{
@@ -54,6 +57,6 @@ func main() {
 	// }
 	// models.CreateUser(exUser, db)
 
-	router := setupRouter()
+	router := setupRouter(db)
 	router.Run(":8080")
 }

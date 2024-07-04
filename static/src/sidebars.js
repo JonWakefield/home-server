@@ -89,7 +89,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
       .then(response => response.json())
       .then(data => {
           console.log('Success:', data);
-          alert("Success", data)
             // IF response comes back SUCCESS (200)
             // then ... add account to home page (need to query database on loadup and display all accounts)
             // maybe do a page re-load to update accounts on UI?
