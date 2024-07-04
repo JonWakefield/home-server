@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"home-server/internal/db"
 	"home-server/internal/models"
 	"net/http"
@@ -23,8 +24,21 @@ func setupRouter() *gin.Engine {
 	})
 
 	// get user
-	r.GET("/api/users", func(c *gin.Context) {
+	r.POST("/api/createUser", func(c *gin.Context) {
+		fmt.Println("Hit endpoint...")
+		// can move this to a function
+		var newUser models.User
 
+		if err := c.ShouldBindJSON(&newUser); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// for now, just respond with the user data
+		c.JSON(http.StatusOK, gin.H{
+			"message": "User created successfully",
+			"user":    newUser,
+		})
 	})
 
 	return r
@@ -34,17 +48,12 @@ func main() {
 	db := db.InitDB()
 	defer db.Close()
 
-	exUser := models.User{
-		ID:           1,
-		Name:         "Jon",
-		Password:     "Hello",
-		Directory:    "",
-		CreatedAt:    "",
-		TotalStorage: 0,
-	}
+	// exUser := models.User{
+	// 	Name:     "Jon",
+	// 	Password: "Hello",
+	// }
+	// models.CreateUser(exUser, db)
 
-	models.CreateUser(exUser, db)
-
-	// router := setupRouter()
-	// router.Run(":8080")
+	router := setupRouter()
+	router.Run(":8080")
 }

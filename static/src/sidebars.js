@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', (event) => {
 
+
   let modalOpener = document.getElementById("createAccModal");
 
   let openModalBtn = document.getElementById("openAccModal");
@@ -10,8 +11,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
   let modalForm = document.getElementById("modalForm");
 
   // account creation fields
-  let name = document.getElementById('nameInput')
-  let password = document.getElementById('passwordInput')
+  let nameInput = document.getElementById('nameInput')
+  let passwordInput = document.getElementById('passwordInput')
 
   // ---- Enter Password Modal ---
   let userSignInModal = document.getElementById("signInModal");
@@ -25,9 +26,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
     showPassword.addEventListener("change", () => {
       let isChecked = showPassword.checked;
       if (isChecked) {
-        password.type = "text";
+        passwordInput.type = "text";
       } else {
-        password.type = "password";
+        passwordInput.type = "password";
       }
     })
   }
@@ -40,8 +41,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
   // close sign up modal
   closeAccModalBtn.onclick = function() {
     modalOpener.style.display = "none";
-    password.value = "";
-    name.value = "";
+    passwordInput.value = "";
+    nameInput.value = "";
   }
   // close enter password modal
   closeSignInModalBtn.onclick = function() {
@@ -52,28 +53,51 @@ document.addEventListener('DOMContentLoaded', (event) => {
   window.onclick = function(event) {
       if (event.target == modalOpener) {
         modalOpener.style.display = "none";
-        password.value = "";
-        name.value = "";
+        passwordInput.value = "";
+        nameInput.value = "";
       } else if (event.target == userSignInModal) {
         userSignInModal.style.display = "none";
       }
   }
 
   modalForm.addEventListener('submit', (event) => {
+    console.log("In event")
     event.preventDefault();
 
- 
-    console.log(name.value)
-    console.log(password.value)
+    const name = nameInput.value
+    const password = passwordInput.value
+    if(!name) {
+      // handle cases when user didnt input any values
+    }
+    if(!password) {
+      // handle cases when user didnt input any values
+    }
 
-    // send an api call to create user in SQL table
-    // ...
-    
-
-    // IF response comes back SUCCESS (200)
-    // then ... add account to home page (need to query database on loadup and display all accounts)
-    // maybe do a page re-load to update accounts on UI?
-
+    // Send API request when button is clicked
+    let user = {
+      name: name,
+      password: password,
+    }
+      fetch('/api/createUser', {
+          method: 'POST', // Change to 'POST' if needed
+          headers: {
+              'Content-Type': 'application/json',
+              // Add any other necessary headers here
+          },
+          body: JSON.stringify(user)
+      })
+      .then(response => response.json())
+      .then(data => {
+          console.log('Success:', data);
+          alert("Success", data)
+            // IF response comes back SUCCESS (200)
+            // then ... add account to home page (need to query database on loadup and display all accounts)
+            // maybe do a page re-load to update accounts on UI?
+      })
+      .catch((error) => {
+          console.error('Error:', error);
+          // Handle errors here
+      });
     // can close the modal here
     modalOpener.style.display = "none";
   })

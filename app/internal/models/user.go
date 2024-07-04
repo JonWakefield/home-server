@@ -11,13 +11,18 @@ import (
 )
 
 type User struct {
-	ID           int     `json:"id"`
-	Name         string  `json:"name"`
-	Password     string  `json:"password"`
-	Directory    string  `json:"directory"`
-	CreatedAt    string  `json:"created_at"`
-	TotalStorage float32 `json:"total_storage"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
+
+// User struct {
+// 	ID           int     `json:"id"`
+// 	Name         string  `json:"name"`
+// 	Password     string  `json:"password"`
+// 	Directory    string  `json:"directory"`
+// 	CreatedAt    string  `json:"created_at"`
+// 	TotalStorage float32 `json:"total_storage"`
+// }
 
 const BasePath = "/app/users/"
 const DirPermissions = 0755
