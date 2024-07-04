@@ -1,4 +1,38 @@
+// probably need to do some slight cleanup / re-working
 document.addEventListener('DOMContentLoaded', (event) => {
+
+  function displayUserPanels(userList) {
+
+    userList.forEach(element => {
+      console.log("user: ", element)
+    });
+
+
+  }
+
+  function fetchUserInfo() {
+    console.log("Fetching user info...")
+    fetch('/api/retrieveUsers', {
+      method: "GET",
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error("Failed to retrieve content " + response.statusText)
+      }
+      return response.json();
+    }).then(data => {
+      // console.log("Success: ", data);
+      let userList = data["user_info"];
+      displayUserPanels(userList);
+      // call function to setup UI
+    }).catch(error => {
+      console.log("Error: ", error)
+      // setup error message here
+    })
+  }
+  fetchUserInfo();
 
 
   let modalOpener = document.getElementById("createAccModal");
@@ -92,6 +126,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
             // IF response comes back SUCCESS (200)
             // then ... add account to home page (need to query database on loadup and display all accounts)
             // maybe do a page re-load to update accounts on UI?
+            passwordInput.value = "";
+            nameInput.value = "";
       })
       .catch((error) => {
           console.error('Error:', error);

@@ -10,19 +10,16 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// theses structs are sorta crap,is there is a way to combine these two structs ?
 type User struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 }
 
-// User struct {
-// 	ID           int     `json:"id"`
-// 	Name         string  `json:"name"`
-// 	Password     string  `json:"password"`
-// 	Directory    string  `json:"directory"`
-// 	CreatedAt    string  `json:"created_at"`
-// 	TotalStorage float32 `json:"total_storage"`
-// }
+type UserInfo struct {
+	Name         string  `json:"name"`
+	TotalStorage float32 `json:"total_storage"`
+}
 
 const BasePath = "/app/users/"
 const DirPermissions = 0755
@@ -116,4 +113,35 @@ func CreateUser(user User, db *sql.DB) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func RetrieveUsers(db *sql.DB) []UserInfo {
+
+	query := `SELECT name, total_storage FROM Users`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Printf("Error retrieving users: %e ", err)
+	}
+	defer rows.Close()
+
+	users := make([]UserInfo, 0)
+	for rows.Next() {
+		var name string
+		var storage float32
+		if err := rows.Scan(&name, &storage); err != nil {
+			log.Printf("Error reading in user info: %v", err)
+		}
+		user := UserInfo{
+			Name:         name,
+			TotalStorage: storage,
+		}
+		users = append(users, user)
+	}
+	// check for any final errors
+	if err := rows.Err(); err != nil {
+		log.Printf("Encountered error reading in user data: %v", err)
+	}
+
+	return users
 }

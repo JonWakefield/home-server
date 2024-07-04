@@ -44,18 +44,27 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		})
 	})
 
+	// retrieve users to display on UI
+	r.GET("/api/retrieveUsers", func(c *gin.Context) {
+
+		userList := models.RetrieveUsers(db)
+
+		fmt.Println("Retrieved User Info: ")
+		fmt.Println(userList)
+
+		c.JSON(http.StatusOK, gin.H{
+			"response":  "OK!",
+			"user_info": userList,
+		})
+
+	})
+
 	return r
 }
 
 func main() {
 	db := db.InitDB()
 	defer db.Close()
-
-	// exUser := models.User{
-	// 	Name:     "Jon",
-	// 	Password: "Hello",
-	// }
-	// models.CreateUser(exUser, db)
 
 	router := setupRouter(db)
 	router.Run(":8080")
