@@ -1,21 +1,37 @@
 package main
 
 import (
+	"home-server/internal/db"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
+func setupRouter() *gin.Engine {
+	// disable console color
+	// gin.DisableConsoleColor()
+	r := gin.Default()
 
-	router := gin.Default()
+	// --- Setup routes ---
 
-	router.GET("/", func(c *gin.Context) {
+	// ping test
+	r.GET("/api/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello, World! New time",
+			"response": "pong",
 		})
 	})
 
-	router.Run(":8080")
+	// get user
+	r.GET("/api/users", func(c *gin.Context) {
 
+	})
+
+	return r
+}
+
+func main() {
+	db := db.InitDB()
+	defer db.Close()
+	// router := setupRouter()
+	// router.Run(":8080")
 }

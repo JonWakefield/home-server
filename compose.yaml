@@ -16,7 +16,6 @@ services:
       - backend
     restart: always
 
-
   backend:
     image: go-backend:latest
     container_name: go_backend
