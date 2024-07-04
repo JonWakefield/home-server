@@ -10,7 +10,7 @@ import (
 )
 
 // NOTE: CHANGE PATH ON RPi
-const dbName = "cloud.db"
+const dbName = "/app/cloud.db"
 
 func createUserTable(db *sql.DB) {
 
