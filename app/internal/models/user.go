@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -18,7 +19,8 @@ type User struct {
 	TotalStorage float32 `json:"total_storage"`
 }
 
-const BasePath = "/app/"
+const BasePath = "/app/users/"
+const DirPermissions = 0755
 
 func hashPassword(password string) (string, error) {
 	// gen hash password
@@ -41,43 +43,72 @@ func getCurTime() string {
 
 }
 
+func checkUserExists(name string, db *sql.DB) (bool, error) {
+
+	count := 0
+	query := `SELECT COUNT(*) FROM Users WHERE name = ?`
+	err := db.QueryRow(query, name).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func createDir(path string) error {
+	err := os.Mkdir(path, DirPermissions)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func CreateUser(user User, db *sql.DB) (bool, error) {
-	// need to decide / find out if i should check if the user already exists or if execting the query will take care of that
+	// note may to return a string (or maybe use error) to inform user if something went wrong (i.e name already exists)
+
+	// check to see if user exists
+	userExists, err := checkUserExists(user.Name, db)
+	if err != nil {
+		log.Printf("Failed to query database: %v", err)
+		return false, err
+	}
+	if userExists {
+		log.Printf("User already exists in database, can't insert")
+		return false, nil
+	}
 
 	startingStorage := 0.0
 
-	// hash + salt password first
+	// hash password first
 	hashedPassword, err := hashPassword(user.Password)
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
-		// TODO NEED TO RETURN ERROR TO CLIENT
+		return false, err
 	}
-
 	// get current time
 	curTime := getCurTime()
-
 	// create path
 	path := createPath(user.Name)
-
-	fmt.Println(hashedPassword)
-	fmt.Println(curTime)
-	fmt.Println(path)
 
 	insertUserQuery := `INSERT INTO Users (name, password, directory, created_at, total_storage) VALUES (?, ?, ?, ?, ?)`
 	statement, err := db.Prepare(insertUserQuery)
 	if err != nil {
 		log.Printf("Failed to insert user into Database: %v", err)
-		// TODO NEED TO RETURN ERROR TO CLIENT
+		return false, err
 	}
 	defer statement.Close()
 
 	_, err = statement.Exec(user.Name, hashedPassword, path, curTime, startingStorage)
 	if err != nil {
 		log.Printf("Failed to insert query into table `Users` %v", err)
-		// TODO RETURN Err
+		return false, err
 	}
 	// create directory for user on success
-
 	fmt.Println("Successfully added user to table `Users`")
+
+	err = createDir(path)
+	if err != nil {
+		log.Printf("Failed to create directory for user: %v", err)
+		return false, err
+	}
 	return true, nil
 }
