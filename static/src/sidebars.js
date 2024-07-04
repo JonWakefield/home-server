@@ -3,12 +3,25 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   function displayUserPanels(userList) {
 
-    userList.forEach(element => {
-      console.log("user: ", element)
+    let userPanel = document.getElementById("userListGroup")
+
+    // Assuming data is an array of objects
+    userList.forEach(item => {
+        const elementA = document.createElement('a');
+        const elementDiv= document.createElement('div');
+        const elementStrong = document.createElement('strong');
+        elementDiv.className = "d-flex w-100 align-items-center justify-content-between";
+        elementA.className = "list-group-item list-group-item-action active py-3 lh-sm";
+        elementStrong.className = "mb-1 fs-5 fw-semibold";
+        elementStrong.textContent = `${item.name}`; // Customize this to match your data structure
+
+        elementDiv.appendChild(elementStrong);
+        elementA.appendChild(elementDiv);
+
+        userPanel.appendChild(elementA);
+
     });
-
-
-  }
+}
 
   function fetchUserInfo() {
     console.log("Fetching user info...")
