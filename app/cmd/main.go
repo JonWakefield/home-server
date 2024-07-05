@@ -59,6 +59,34 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 	})
 
+	r.POST("/api/signin", func(c *gin.Context) {
+		fmt.Println("Trying login...")
+
+		var user models.User
+
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		fmt.Println("User: ", user)
+
+		// call function
+		success, err := models.SignIn(user)
+		if err != nil {
+			// handle and return error to client
+		}
+
+		if success {
+			// If user signed in successfully, need too...
+			// 1) display user home page
+			// show documents / folder user has stored
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": success,
+		})
+	})
+
 	return r
 }
 

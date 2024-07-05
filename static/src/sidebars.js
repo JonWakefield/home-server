@@ -4,6 +4,9 @@ const strongPanelClass = "mb-1 fs-3 fw-semibold";
 const smallPanelClass = "text-body-secondary storage";
 
 
+let accounts;
+
+
 function createSvg() {
 
   // SVG element
@@ -24,8 +27,19 @@ function createSvg() {
   return svgElement
 }
 
+
+
 // probably need to do some slight cleanup / re-working
 document.addEventListener('DOMContentLoaded', (event) => {
+
+  function showLoginModal(accountId) {
+    // Find the account data by ID (this could be more complex in real scenarios)
+    const account = accounts.find(acc => acc.id === accountId);
+    if (account) {
+      userSignInModal.dataset.accountId = account.id;
+      userSignInModal.style.display = 'block';
+    }
+  }
 
 
   function displayUserPanels(userList) {
@@ -34,22 +48,34 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     // Assuming data is an array of objects
     userList.forEach(item => {
-        const elementA = document.createElement('a');
+        const id = item.id
+        const name = item.name
+        const totalStorage = item.total_storage
+
+        const panel = document.createElement('a');
+        panel.dataset.accountId = id;
         const elementDiv= document.createElement('div');
         const elementStrong = document.createElement('strong');
         const elementSmall = document.createElement('small');
         const svg = createSvg()
         elementDiv.className = divPanelClass;
-        elementA.className = aTagClass;
+        panel.className = aTagClass;
         elementStrong.className = strongPanelClass;
         elementSmall.className = smallPanelClass;
-        elementStrong.textContent = item.name; // Customize this to match your data structure
-        elementSmall.textContent = `[${item.total_storage} Mb]`
+
+        elementStrong.textContent = name; // Customize this to match your data structure
+        // TODO calc if we should display kb or mb  
+        elementSmall.textContent = `[${totalStorage} Mb]`
         elementDiv.appendChild(svg);
         elementDiv.appendChild(elementStrong);
         elementDiv.appendChild(elementSmall);
-        userPanel.appendChild(elementA);
-        elementA.appendChild(elementDiv);
+        userPanel.appendChild(panel);
+        panel.appendChild(elementDiv);
+
+
+        panel.addEventListener('click', () => {
+          showLoginModal(id);
+        })
     });
 }
 
@@ -67,8 +93,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
       return response.json();
     }).then(data => {
       // console.log("Success: ", data);
-      let userList = data["user_info"];
-      displayUserPanels(userList);
+      accounts = data["user_info"];
+      console.log("users: ", accounts)
+      displayUserPanels(accounts);
       // call function to setup UI
     }).catch(error => {
       console.log("Error: ", error)
@@ -86,14 +113,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
   let closeSignInModalBtn = document.getElementsByClassName("btn-close")[1];
 
   let modalForm = document.getElementById("modalForm");
-
+  let signInForm = document.getElementById("modalSignInForm");
   // account creation fields
   let nameInput = document.getElementById('nameInput')
   let passwordInput = document.getElementById('passwordInput')
 
   // ---- Enter Password Modal ---
   let userSignInModal = document.getElementById("signInModal");
-  let openSignInModal = document.getElementById("userBox");
 
   // When the user clicks on the button, open the modal
   openModalBtn.onclick = function() {
@@ -108,11 +134,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         passwordInput.type = "password";
       }
     })
-  }
-
-  // open enter password modal
-  openSignInModal.onclick = function() {
-    userSignInModal.style.display = "block";
   }
 
   // close sign up modal
@@ -176,7 +197,48 @@ document.addEventListener('DOMContentLoaded', (event) => {
           console.error('Error:', error);
           // Handle errors here
       });
-    // can close the modal here
+
+    // maybe don't close modal if something goes wrong:
     modalOpener.style.display = "none";
   })
+
+  signInForm.addEventListener('submit', (event) => {
+
+    const passwordInput = document.getElementById("signInPassword") 
+    let password = passwordInput.value;
+
+    // TODO: Add show password toggle
+
+    
+    
+    const id = userSignInModal.dataset.accountId;
+    let account;
+    // determine account
+    accounts.forEach(user => {
+      if (user.id == id) {
+        account = user
+      }
+    })
+    let userCreds = {
+      name: account.name,
+      password: password,
+    }
+
+    // fetch login:
+    fetch('/api/signin', {
+      method: "POST",
+      headers: {
+        'Content-Type': "application/json"
+      },
+      body: JSON.stringify(userCreds)
+    }).then(response => response.json())
+    .then(data => {
+      console.log("login status: ", data);
+    }).catch((error) => {
+      console.log("Error: ", error)
+    });
+  })
+
+  // maybe don't close modal if something goes wrong:
+
 });

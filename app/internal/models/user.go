@@ -17,6 +17,7 @@ type User struct {
 }
 
 type UserInfo struct {
+	ID           int     `json:"id"`
 	Name         string  `json:"name"`
 	TotalStorage float32 `json:"total_storage"`
 }
@@ -117,7 +118,7 @@ func CreateUser(user User, db *sql.DB) (bool, error) {
 
 func RetrieveUsers(db *sql.DB) []UserInfo {
 
-	query := `SELECT name, total_storage FROM Users`
+	query := `SELECT id, name, total_storage FROM Users`
 
 	rows, err := db.Query(query)
 	if err != nil {
@@ -129,10 +130,12 @@ func RetrieveUsers(db *sql.DB) []UserInfo {
 	for rows.Next() {
 		var name string
 		var storage float32
-		if err := rows.Scan(&name, &storage); err != nil {
+		var id int
+		if err := rows.Scan(&id, &name, &storage); err != nil {
 			log.Printf("Error reading in user info: %v", err)
 		}
 		user := UserInfo{
+			ID:           id,
 			Name:         name,
 			TotalStorage: storage,
 		}
@@ -144,4 +147,9 @@ func RetrieveUsers(db *sql.DB) []UserInfo {
 	}
 
 	return users
+}
+
+func SignIn(user User) (bool, error) {
+
+	return true, nil
 }

@@ -35,8 +35,8 @@
             </strong>
             <small class="text-body-secondary storage">[storage]</small>
           </div>
-          <div class="col-10 mb-1 small"></div>
-        </a> -->
+          <div class="col-10 mb-1 small"></div> -->
+        </a>
       </div>
     </div>
     <div class="b-example-divider b-example-vr"></div>
@@ -64,7 +64,7 @@
               <label for="passwordInput">Password</label>
             </div>
             <div class="form-floating mb-3">
-              <input type="checkbox" id="showPassword" class="showPassword"> Show Password
+              <input type="checkbox" id="showPassword" class="showPassword">Show Password
             </div>
             <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" id="createAcc" type="submit">Create
               Account</button>
@@ -75,6 +75,7 @@
     </div>
   </div>
 
+  <!-- Sign in modal -->
   <div id="signInModal" class="modal modal-sheet p-4 py-md-5" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content rounded-4 shadow">
@@ -83,15 +84,15 @@
           <span type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></span>
         </div>
         <div class="modal-body p-5 pt-0">
-          <form id="modalForm" class="">
+          <form id="modalSignInForm" class="">
             <div class="form-floating mb-3">
-              <input type="password" class="form-control rounded-3" id="passwordInput" placeholder="Password">
-              <label for="passwordInput">Password</label>
+              <input type="password" class="form-control rounded-3" id="signInPassword" placeholder="Password">
+              <label for="signInPassword">Password</label>
             </div>
             <div class="form-floating mb-3">
-              <input type="checkbox" id="showPassword" class="showPassword"> Show Password
+              <input type="checkbox" id="showPasswordSign" class="showPassword"> Show Password
             </div>
-            <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" id="createAcc" type="submit">Access</button>
+            <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" id="loginBut" type="submit">Access</button>
             <hr class="my-1">
           </form>
         </div>
