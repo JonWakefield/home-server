@@ -1,1 +1,3 @@
-console.log("loaded!")
+import { loadSidebar } from "./sidebars";
+
+loadSidebar()

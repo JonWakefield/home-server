@@ -1,109 +1,15 @@
-const aTagClass = "list-group-item list-group-item-action py-3 lh-sm";
-const divPanelClass = "d-flex w-100 align-items-center";
-const strongPanelClass = "mb-1 fs-3 fw-semibold";
-const smallPanelClass = "text-body-secondary storage";
-
-
-let accounts;
-
-
-function createSvg() {
-
-  // SVG element
-  const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svgElement.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  svgElement.setAttribute("width", "20");
-  svgElement.setAttribute("height", "20");
-  svgElement.setAttribute("fill", "currentColor");
-  svgElement.setAttribute("class", "bi bi-chevron-right");
-  svgElement.setAttribute("viewBox", "0 0 16 16");
-
-  const pathElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  pathElement.setAttribute("fill-rule", "evenodd");
-  pathElement.setAttribute("d", "M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708");
-  
-  svgElement.appendChild(pathElement);
-
-  return svgElement
-}
 
 
 
-// probably need to do some slight cleanup / re-working
-document.addEventListener('DOMContentLoaded', (event) => {
+// change function to export if we incorporate multiple js files
+function loadSidebar() {
+  console.log("Loading sidebar...")
 
-  function showLoginModal(accountId) {
-    // Find the account data by ID (this could be more complex in real scenarios)
-    const account = accounts.find(acc => acc.id === accountId);
-    if (account) {
-      userSignInModal.dataset.accountId = account.id;
-      userSignInModal.style.display = 'block';
-    }
-  }
-
-
-  function displayUserPanels(userList) {
-
-    let userPanel = document.getElementById("userListGroup")
-
-    // Assuming data is an array of objects
-    userList.forEach(item => {
-        const id = item.id
-        const name = item.name
-        const totalStorage = item.total_storage
-
-        const panel = document.createElement('a');
-        panel.dataset.accountId = id;
-        const elementDiv= document.createElement('div');
-        const elementStrong = document.createElement('strong');
-        const elementSmall = document.createElement('small');
-        const svg = createSvg()
-        elementDiv.className = divPanelClass;
-        panel.className = aTagClass;
-        elementStrong.className = strongPanelClass;
-        elementSmall.className = smallPanelClass;
-
-        elementStrong.textContent = name; // Customize this to match your data structure
-        // TODO calc if we should display kb or mb  
-        elementSmall.textContent = `[${totalStorage} Mb]`
-        elementDiv.appendChild(svg);
-        elementDiv.appendChild(elementStrong);
-        elementDiv.appendChild(elementSmall);
-        userPanel.appendChild(panel);
-        panel.appendChild(elementDiv);
-
-
-        panel.addEventListener('click', () => {
-          showLoginModal(id);
-        })
-    });
-}
-
-  function fetchUserInfo() {
-    console.log("Fetching user info...")
-    fetch('/api/retrieveUsers', {
-      method: "GET",
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    }).then(response => {
-      if (!response.ok) {
-        throw new Error("Failed to retrieve content " + response.statusText)
-      }
-      return response.json();
-    }).then(data => {
-      // console.log("Success: ", data);
-      accounts = data["user_info"];
-      console.log("users: ", accounts)
-      displayUserPanels(accounts);
-      // call function to setup UI
-    }).catch(error => {
-      console.log("Error: ", error)
-      // setup error message here
-    })
-  }
-  fetchUserInfo();
-
+  const aTagClass = "list-group-item list-group-item-action py-3 lh-sm";
+  const divPanelClass = "d-flex w-100 align-items-center";
+  const strongPanelClass = "mb-1 fs-3 fw-semibold";
+  const smallPanelClass = "text-body-secondary storage";
+  let accounts;
 
   let modalOpener = document.getElementById("createAccModal");
 
@@ -157,6 +63,74 @@ document.addEventListener('DOMContentLoaded', (event) => {
         userSignInModal.style.display = "none";
       }
   }
+
+
+  function createSvg() {
+    // SVG element
+    const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgElement.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    svgElement.setAttribute("width", "20");
+    svgElement.setAttribute("height", "20");
+    svgElement.setAttribute("fill", "currentColor");
+    svgElement.setAttribute("class", "bi bi-chevron-right");
+    svgElement.setAttribute("viewBox", "0 0 16 16");
+  
+    const pathElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathElement.setAttribute("fill-rule", "evenodd");
+    pathElement.setAttribute("d", "M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708");
+    
+    svgElement.appendChild(pathElement);
+  
+    return svgElement
+  }
+
+  function displayUserPanels(userList) {
+
+    let userPanel = document.getElementById("userListGroup")
+
+    // Assuming data is an array of objects
+    userList.forEach(item => {
+        const id = item.id
+        const name = item.name
+        const totalStorage = item.total_storage
+
+        const panel = document.createElement('a');
+        panel.dataset.accountId = id;
+        const elementDiv= document.createElement('div');
+        const elementStrong = document.createElement('strong');
+        const elementSmall = document.createElement('small');
+        const svg = createSvg()
+        elementDiv.className = divPanelClass;
+        panel.className = aTagClass;
+        elementStrong.className = strongPanelClass;
+        elementSmall.className = smallPanelClass;
+
+        elementStrong.textContent = name; // Customize this to match your data structure
+        // TODO calc if we should display kb or mb  
+        elementSmall.textContent = `[${totalStorage} Mb]`
+        elementDiv.appendChild(svg);
+        elementDiv.appendChild(elementStrong);
+        elementDiv.appendChild(elementSmall);
+        userPanel.appendChild(panel);
+        panel.appendChild(elementDiv);
+
+
+        panel.addEventListener('click', () => {
+          showLoginModal(id);
+        })
+    });
+  }
+
+
+  function showLoginModal(accountId) {
+      // Find the account data by ID (this could be more complex in real scenarios)
+      const account = accounts.find(acc => acc.id === accountId);
+      if (account) {
+        userSignInModal.dataset.accountId = account.id;
+        userSignInModal.style.display = 'block';
+      }
+  }
+
 
   modalForm.addEventListener('submit', (event) => {
     console.log("In event")
@@ -241,4 +215,35 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   // maybe don't close modal if something goes wrong:
 
-});
+
+  function fetchUserInfo() {
+    console.log("Fetching user info...")
+    fetch('/api/retrieveUsers', {
+      method: "GET",
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error("Failed to retrieve content " + response.statusText)
+      }
+      return response.json();
+    }).then(data => {
+      // console.log("Success: ", data);
+      accounts = data["user_info"];
+      console.log("users: ", accounts)
+      displayUserPanels(accounts);
+      // call function to setup UI
+    }).catch(error => {
+      console.log("Error: ", error)
+      // setup error message here
+    })
+  }
+  fetchUserInfo();
+
+
+
+}
+document.addEventListener('DOMContentLoaded', (event) => {
+    loadSidebar()
+})
