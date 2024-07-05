@@ -1,5 +1,32 @@
+const aTagClass = "list-group-item list-group-item-action py-3 lh-sm";
+const divPanelClass = "d-flex w-100 align-items-center";
+const strongPanelClass = "mb-1 fs-3 fw-semibold";
+const smallPanelClass = "text-body-secondary storage";
+
+
+function createSvg() {
+
+  // SVG element
+  const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svgElement.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  svgElement.setAttribute("width", "20");
+  svgElement.setAttribute("height", "20");
+  svgElement.setAttribute("fill", "currentColor");
+  svgElement.setAttribute("class", "bi bi-chevron-right");
+  svgElement.setAttribute("viewBox", "0 0 16 16");
+
+  const pathElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  pathElement.setAttribute("fill-rule", "evenodd");
+  pathElement.setAttribute("d", "M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708");
+  
+  svgElement.appendChild(pathElement);
+
+  return svgElement
+}
+
 // probably need to do some slight cleanup / re-working
 document.addEventListener('DOMContentLoaded', (event) => {
+
 
   function displayUserPanels(userList) {
 
@@ -10,16 +37,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const elementA = document.createElement('a');
         const elementDiv= document.createElement('div');
         const elementStrong = document.createElement('strong');
-        elementDiv.className = "d-flex w-100 align-items-center justify-content-between";
-        elementA.className = "list-group-item list-group-item-action active py-3 lh-sm";
-        elementStrong.className = "mb-1 fs-5 fw-semibold";
-        elementStrong.textContent = `${item.name}`; // Customize this to match your data structure
-
+        const elementSmall = document.createElement('small');
+        const svg = createSvg()
+        elementDiv.className = divPanelClass;
+        elementA.className = aTagClass;
+        elementStrong.className = strongPanelClass;
+        elementSmall.className = smallPanelClass;
+        elementStrong.textContent = item.name; // Customize this to match your data structure
+        elementSmall.textContent = `[${item.total_storage} Mb]`
+        elementDiv.appendChild(svg);
         elementDiv.appendChild(elementStrong);
-        elementA.appendChild(elementDiv);
-
+        elementDiv.appendChild(elementSmall);
         userPanel.appendChild(elementA);
-
+        elementA.appendChild(elementDiv);
     });
 }
 
