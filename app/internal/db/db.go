@@ -20,7 +20,8 @@ func createUserTable(db *sql.DB) {
 		password TEXT NOT NULL,
 		directory TEXT NOT NULL UNIQUE,
 		created_at TEXT NOT NULL,
-		total_storage REAL NOT NULL
+		total_storage REAL NOT NULL,
+		token TEXT
 	)`
 
 	_, err := db.Exec(createTableSQL)

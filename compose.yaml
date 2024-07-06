@@ -25,6 +25,7 @@ services:
     command: tail -f /dev/null
     volumes:
       - ./app:/app
+      - ./static:/static
     ports:
       - "8080:8080"
     restart: always

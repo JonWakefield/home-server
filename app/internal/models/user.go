@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"home-server/internal/utils"
 	"log"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 // theses structs are sorta crap,is there is a way to combine these two structs ?
 type User struct {
-	ID           int       `json:"id"`
-	Name         string    `json:"name"`
-	Password     string    `json:"password"`
-	Directory    string    `json:"directory"`
-	CreatedAt    time.Time `json:"created_at"`
-	TotalStorage float32   `json:"total_storage"`
+	ID           int     `json:"id"`
+	Name         string  `json:"name"`
+	Password     string  `json:"password"`
+	Directory    string  `json:"directory"`
+	CreatedAt    string  `json:"created_at"`
+	TotalStorage float32 `json:"total_storage"`
+	Token        string  `json:"token"`
 }
 
 const BasePath = "/app/users/"
@@ -60,6 +60,7 @@ func (user *User) CreateUser(db *sql.DB) (bool, error) {
 	}
 
 	startingStorage := 0.0
+	startingToken := ""
 
 	// hash password first
 	hashedPassword, err := user.hashPassword()
@@ -72,7 +73,7 @@ func (user *User) CreateUser(db *sql.DB) (bool, error) {
 	// create path
 	path := user.createPath()
 
-	insertUserQuery := `INSERT INTO Users (name, password, directory, created_at, total_storage) VALUES (?, ?, ?, ?, ?)`
+	insertUserQuery := `INSERT INTO Users (name, password, directory, created_at, total_storage, token) VALUES (?, ?, ?, ?, ?, ?)`
 	statement, err := db.Prepare(insertUserQuery)
 	if err != nil {
 		log.Printf("Failed to insert user into Database: %v", err)
@@ -80,7 +81,7 @@ func (user *User) CreateUser(db *sql.DB) (bool, error) {
 	}
 	defer statement.Close()
 
-	_, err = statement.Exec(user.Name, hashedPassword, path, curTime, startingStorage)
+	_, err = statement.Exec(user.Name, hashedPassword, path, curTime, startingStorage, startingToken)
 	if err != nil {
 		log.Printf("Failed to insert query into table `Users` %v", err)
 		return false, err
@@ -129,29 +130,55 @@ func RetrieveUsers(db *sql.DB) []User {
 	return users
 }
 
-func (user *User) retrieveUser(db *sql.DB) (string, error) {
+func (user *User) retrieveUser(db *sql.DB) (User, error) {
 
-	var password string
-	query := `SELECT password FROM Users WHERE id = ?`
-	err := db.QueryRow(query, user.ID).Scan(&password)
+	var storedUser User
+	query := `SELECT * FROM Users WHERE id = ?`
+	err := db.QueryRow(query, user.ID).Scan(&storedUser.ID,
+		&storedUser.Name,
+		&storedUser.Password,
+		&storedUser.Directory,
+		&storedUser.CreatedAt,
+		&storedUser.TotalStorage,
+		&storedUser.Token)
+
 	if err != nil {
-		return "", err
+		return User{}, err
 	}
-	fmt.Println("Retrieved: ", password)
-	return password, nil
+	fmt.Println("Retrieved: ", storedUser.Password)
+	return storedUser, nil
 }
 
-func verifyPassword() {
-
+func (user *User) verifyPassword(hashedPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password))
+	return err == nil
 }
 
 func (user *User) SignIn(db *sql.DB) (bool, error) {
 	// called on user sign in
-	_, err := user.retrieveUser(db)
+	retrUser, err := user.retrieveUser(db)
 	if err != nil {
 		log.Printf("Encountered an error retrieving user info: %v", err)
 		return false, err
 	}
+	match := user.verifyPassword(retrUser.Password)
+	if !match {
+		log.Printf("Failed loggin attempt. User: %s ", user.Name)
+		return false, nil
+	}
+	fmt.Println("User verification Complete!")
 
 	return true, nil
+}
+
+func (user *User) StoreToken(db *sql.DB, token string) error {
+	// store login-token in sql
+	query := `UPDATE Users SET token = ? WHERE name = ?`
+
+	_, err := db.Exec(query, token, user.Name)
+	if err != nil {
+		log.Printf("Failed to store token in Users Table: %v", err)
+		return err
+	}
+	return nil
 }

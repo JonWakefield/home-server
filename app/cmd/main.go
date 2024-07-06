@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"home-server/internal/db"
 	"home-server/internal/models"
+	"home-server/internal/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -73,18 +74,59 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		// call function
 		success, err := user.SignIn(db)
 		if err != nil {
-			// handle and return error to client
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to retrieve user credentials",
+				"login":   false,
+			})
+		}
+		if !success {
+			// user provided the wrong password, inform...
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "login failed. invalid credentials.",
+				"login":   false,
+			})
+			return
+		}
+		// User signed in successfully
+		token, err := utils.GenerateToken()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to generate login token. Login Failed",
+				"login":   false,
+			})
+			return
 		}
 
-		if success {
-			// If user signed in successfully, need too...
-			// 1) display user home page
-			// show documents / folder user has stored
+		// store token in db
+		err = user.StoreToken(db, token)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to store user token. Login Failed",
+				"login":   false,
+			})
+			return
 		}
 
+		c.SetCookie("login-token", token, 3600, "/", "", false, true)
 		c.JSON(http.StatusOK, gin.H{
-			"message": success,
+			"message": "Successfully logged in",
+			"login":   true,
 		})
+
+		// Next:
+		// 1) Return `home page` content (/home)
+		// 2) retreive home page specifics (i.e files, folders...)
+	})
+
+	r.GET("/home", func(c *gin.Context) {
+		fmt.Println("Hit home!")
+		token, err := c.Cookie("login-token")
+		if err != nil || !utils.IsValidToken(db, token) {
+			fmt.Println("Not valid!")
+			c.Redirect(http.StatusTemporaryRedirect, "")
+			return
+		}
+		c.File("/static/home.html")
 	})
 
 	return r
