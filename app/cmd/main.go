@@ -35,7 +35,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			return
 		}
 		fmt.Println("creating user...")
-		models.CreateUser(newUser, db)
+		newUser.CreateUser(db)
 
 		// for now, just respond with the user data
 		c.JSON(http.StatusOK, gin.H{
@@ -71,7 +71,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		fmt.Println("User: ", user)
 
 		// call function
-		success, err := models.SignIn(user)
+		success, err := user.SignIn(db)
 		if err != nil {
 			// handle and return error to client
 		}

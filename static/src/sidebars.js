@@ -204,6 +204,7 @@ function loadSidebar() {
       }
     })
     let userCreds = {
+      id: account.id,
       name: account.name,
       password: password,
     }

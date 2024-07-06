@@ -3,8 +3,8 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"home-server/internal/utils"
 	"log"
-	"os"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -12,64 +12,44 @@ import (
 
 // theses structs are sorta crap,is there is a way to combine these two structs ?
 type User struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
-}
-
-type UserInfo struct {
-	ID           int     `json:"id"`
-	Name         string  `json:"name"`
-	TotalStorage float32 `json:"total_storage"`
+	ID           int       `json:"id"`
+	Name         string    `json:"name"`
+	Password     string    `json:"password"`
+	Directory    string    `json:"directory"`
+	CreatedAt    time.Time `json:"created_at"`
+	TotalStorage float32   `json:"total_storage"`
 }
 
 const BasePath = "/app/users/"
-const DirPermissions = 0755
 
-func hashPassword(password string) (string, error) {
+func (user *User) hashPassword() (string, error) {
 	// gen hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
 	return string(hashedPassword), nil
-
 }
 
-func createPath(name string) string {
-	path := BasePath + name
+func (user *User) createPath() string {
+	path := BasePath + user.Name
 	return path
 }
 
-func getCurTime() string {
-	currentTime := time.Now()
-	return currentTime.Format("2006-01-02 15:04:05")
-
-}
-
-func checkUserExists(name string, db *sql.DB) (bool, error) {
-
+func (user *User) checkUserExists(db *sql.DB) (bool, error) {
 	count := 0
 	query := `SELECT COUNT(*) FROM Users WHERE name = ?`
-	err := db.QueryRow(query, name).Scan(&count)
+	err := db.QueryRow(query, user.Name).Scan(&count)
 	if err != nil {
 		return false, err
 	}
 	return count > 0, nil
 }
 
-func createDir(path string) error {
-	err := os.Mkdir(path, DirPermissions)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func CreateUser(user User, db *sql.DB) (bool, error) {
+func (user *User) CreateUser(db *sql.DB) (bool, error) {
 	// note may to return a string (or maybe use error) to inform user if something went wrong (i.e name already exists)
-
 	// check to see if user exists
-	userExists, err := checkUserExists(user.Name, db)
+	userExists, err := user.checkUserExists(db)
 	if err != nil {
 		log.Printf("Failed to query database: %v", err)
 		return false, err
@@ -82,15 +62,15 @@ func CreateUser(user User, db *sql.DB) (bool, error) {
 	startingStorage := 0.0
 
 	// hash password first
-	hashedPassword, err := hashPassword(user.Password)
+	hashedPassword, err := user.hashPassword()
 	if err != nil {
 		log.Printf("Error hashing password: %v", err)
 		return false, err
 	}
 	// get current time
-	curTime := getCurTime()
+	curTime := utils.GetCurTime()
 	// create path
-	path := createPath(user.Name)
+	path := user.createPath()
 
 	insertUserQuery := `INSERT INTO Users (name, password, directory, created_at, total_storage) VALUES (?, ?, ?, ?, ?)`
 	statement, err := db.Prepare(insertUserQuery)
@@ -108,7 +88,7 @@ func CreateUser(user User, db *sql.DB) (bool, error) {
 	// create directory for user on success
 	fmt.Println("Successfully added user to table `Users`")
 
-	err = createDir(path)
+	err = utils.CreateDir(path)
 	if err != nil {
 		log.Printf("Failed to create directory for user: %v", err)
 		return false, err
@@ -116,7 +96,7 @@ func CreateUser(user User, db *sql.DB) (bool, error) {
 	return true, nil
 }
 
-func RetrieveUsers(db *sql.DB) []UserInfo {
+func RetrieveUsers(db *sql.DB) []User {
 
 	query := `SELECT id, name, total_storage FROM Users`
 
@@ -126,7 +106,7 @@ func RetrieveUsers(db *sql.DB) []UserInfo {
 	}
 	defer rows.Close()
 
-	users := make([]UserInfo, 0)
+	users := make([]User, 0)
 	for rows.Next() {
 		var name string
 		var storage float32
@@ -134,7 +114,7 @@ func RetrieveUsers(db *sql.DB) []UserInfo {
 		if err := rows.Scan(&id, &name, &storage); err != nil {
 			log.Printf("Error reading in user info: %v", err)
 		}
-		user := UserInfo{
+		user := User{
 			ID:           id,
 			Name:         name,
 			TotalStorage: storage,
@@ -149,7 +129,29 @@ func RetrieveUsers(db *sql.DB) []UserInfo {
 	return users
 }
 
-func SignIn(user User) (bool, error) {
+func (user *User) retrieveUser(db *sql.DB) (string, error) {
+
+	var password string
+	query := `SELECT password FROM Users WHERE id = ?`
+	err := db.QueryRow(query, user.ID).Scan(&password)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println("Retrieved: ", password)
+	return password, nil
+}
+
+func verifyPassword() {
+
+}
+
+func (user *User) SignIn(db *sql.DB) (bool, error) {
+	// called on user sign in
+	_, err := user.retrieveUser(db)
+	if err != nil {
+		log.Printf("Encountered an error retrieving user info: %v", err)
+		return false, err
+	}
 
 	return true, nil
 }
