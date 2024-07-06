@@ -218,7 +218,15 @@ function loadSidebar() {
       body: JSON.stringify(userCreds)
     }).then(response => response.json())
     .then(data => {
-      console.log("login status: ", data);
+      const message = data.message
+      const login = data.login
+      if (login) {
+        // redirect user to there home page 
+        window.location.href = "/home";
+      } else {
+        // TODO: display failed to login message
+
+      }
     }).catch((error) => {
       console.log("Error: ", error)
     });
