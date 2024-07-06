@@ -1,66 +1,69 @@
-
-
-
 // change function to export if we incorporate multiple js files
 function loadSidebar() {
   console.log("Loading sidebar...")
 
-  const aTagClass = "list-group-item list-group-item-action py-3 lh-sm";
-  const divPanelClass = "d-flex w-100 align-items-center";
-  const strongPanelClass = "mb-1 fs-3 fw-semibold";
-  const smallPanelClass = "text-body-secondary storage";
   let accounts;
+  const userPanelClasses = {
+    a: "list-group-item list-group-item-action py-3 lh-sm",
+    div: "d-flex w-100 align-items-center",
+    strong:"mb-1 fs-3 fw-semibold",
+    small:"text-body-secondary storage",
+  }
 
-  let modalOpener = document.getElementById("createAccModal");
+  let createAccModal = document.getElementById("createAccModal");
+  let openCreateAccModal = document.getElementById("openAccModal");
+  let closeCreateAccModal = document.getElementsByClassName("btn-close")[0];
+  let closeSignInModal = document.getElementsByClassName("btn-close")[1];
 
-  let openModalBtn = document.getElementById("openAccModal");
-
-  let closeAccModalBtn = document.getElementsByClassName("btn-close")[0];
-  let closeSignInModalBtn = document.getElementsByClassName("btn-close")[1];
-
-  let modalForm = document.getElementById("modalForm");
+  let createAccForm = document.getElementById("modalForm");
   let signInForm = document.getElementById("modalSignInForm");
-  // account creation fields
-  let nameInput = document.getElementById('nameInput')
-  let passwordInput = document.getElementById('passwordInput')
+  
+  // -- account creation fields --
+  let createAccName = document.getElementById('createAccName');
+  let createAccPassword = document.getElementById('createAccPassword');
+  let showPasswordCreateAcc = document.getElementById("showPasswordCreateAcc")
+  let showPasswordSignIn = document.getElementById("showPasswordSignIn")
 
-  // ---- Enter Password Modal ---
-  let userSignInModal = document.getElementById("signInModal");
+  // ---- Sign in Modal ---
+  let signInModal = document.getElementById("signInModal");
+  let signInPassword = document.getElementById("signInPassword");
 
   // When the user clicks on the button, open the modal
-  openModalBtn.onclick = function() {
-    modalOpener.style.display = "block";
+  openCreateAccModal.onclick = function() {
+    createAccModal.style.display = "block";
 
-    let showPassword = document.getElementById("showPassword")
-    showPassword.addEventListener("change", () => {
-      let isChecked = showPassword.checked;
+    showPasswordCreateAcc.addEventListener("change", () => {
+      let isChecked = showPasswordCreateAcc.checked;
       if (isChecked) {
-        passwordInput.type = "text";
+        createAccPassword.type = "text";
       } else {
-        passwordInput.type = "password";
+        createAccPassword.type = "password";
       }
     })
   }
-
   // close sign up modal
-  closeAccModalBtn.onclick = function() {
-    modalOpener.style.display = "none";
-    passwordInput.value = "";
-    nameInput.value = "";
+  closeCreateAccModal.onclick = function() {
+    createAccModal.style.display = "none";
+    createAccPassword.value = "";
+    createAccName.value = "";
+    showPassword.checked = false;
   }
   // close enter password modal
-  closeSignInModalBtn.onclick = function() {
-    userSignInModal.style.display = "none";
+  closeSignInModal.onclick = function() {
+    signInModal.style.display = "none";
+    signInPassword.value = "";
   }
 
   // When the user clicks anywhere outside of the modal, close it
   window.onclick = function(event) {
-      if (event.target == modalOpener) {
-        modalOpener.style.display = "none";
-        passwordInput.value = "";
-        nameInput.value = "";
-      } else if (event.target == userSignInModal) {
-        userSignInModal.style.display = "none";
+      if (event.target == createAccModal) {
+        createAccModal.style.display = "none";
+        createAccPassword.value = "";
+        createAccName.value = "";
+        showPassword.checked = false;
+      } else if (event.target == signInModal) {
+        signInModal.style.display = "none";
+        signInPassword.value = "";
       }
   }
 
@@ -94,26 +97,32 @@ function loadSidebar() {
         const name = item.name
         const totalStorage = item.total_storage
 
+        // create elements
         const panel = document.createElement('a');
-        panel.dataset.accountId = id;
         const elementDiv= document.createElement('div');
         const elementStrong = document.createElement('strong');
         const elementSmall = document.createElement('small');
-        const svg = createSvg()
-        elementDiv.className = divPanelClass;
-        panel.className = aTagClass;
-        elementStrong.className = strongPanelClass;
-        elementSmall.className = smallPanelClass;
 
-        elementStrong.textContent = name; // Customize this to match your data structure
+        // style elements
+        panel.dataset.accountId = id;
+        elementDiv.className = userPanelClasses.div;
+        panel.className = userPanelClasses.a;
+        elementStrong.className = userPanelClasses.strong;
+        elementSmall.className = userPanelClasses.small;
+        
+        elementStrong.textContent = name; 
+
         // TODO calc if we should display kb or mb  
         elementSmall.textContent = `[${totalStorage} Mb]`
+        
+        let svg = createSvg()
+
+        // assemble onto DOM
         elementDiv.appendChild(svg);
         elementDiv.appendChild(elementStrong);
         elementDiv.appendChild(elementSmall);
-        userPanel.appendChild(panel);
         panel.appendChild(elementDiv);
-
+        userPanel.appendChild(panel);
 
         panel.addEventListener('click', () => {
           showLoginModal(id);
@@ -123,21 +132,27 @@ function loadSidebar() {
 
 
   function showLoginModal(accountId) {
-      // Find the account data by ID (this could be more complex in real scenarios)
+      // Find the account data by ID 
       const account = accounts.find(acc => acc.id === accountId);
       if (account) {
-        userSignInModal.dataset.accountId = account.id;
-        userSignInModal.style.display = 'block';
+        signInModal.dataset.accountId = account.id;
+        signInModal.style.display = 'block';
+        showPasswordSignIn.addEventListener("change", () => {
+          let isChecked = showPasswordSignIn.checked;
+          if (isChecked) {
+            signInPassword.type = "text";
+          } else {
+            signInPassword.type = "password";
+          }
+        })
       }
   }
 
+  createAccForm.addEventListener('submit', (event) => {
+    event.preventDefault(); //removing preventDefault causes the page to reload
 
-  modalForm.addEventListener('submit', (event) => {
-    console.log("In event")
-    event.preventDefault();
-
-    const name = nameInput.value
-    const password = passwordInput.value
+    const name = createAccName.value
+    const password = createAccPassword.value
     if(!name) {
       // handle cases when user didnt input any values
     }
@@ -145,16 +160,14 @@ function loadSidebar() {
       // handle cases when user didnt input any values
     }
 
-    // Send API request when button is clicked
     let user = {
       name: name,
       password: password,
     }
       fetch('/api/createUser', {
-          method: 'POST', // Change to 'POST' if needed
+          method: 'POST',
           headers: {
               'Content-Type': 'application/json',
-              // Add any other necessary headers here
           },
           body: JSON.stringify(user)
       })
@@ -164,8 +177,8 @@ function loadSidebar() {
             // IF response comes back SUCCESS (200)
             // then ... add account to home page (need to query database on loadup and display all accounts)
             // maybe do a page re-load to update accounts on UI?
-            passwordInput.value = "";
-            nameInput.value = "";
+            createAccPassword.value = "";
+            createAccName.value = "";
       })
       .catch((error) => {
           console.error('Error:', error);
@@ -173,19 +186,16 @@ function loadSidebar() {
       });
 
     // maybe don't close modal if something goes wrong:
-    modalOpener.style.display = "none";
+    createAccModal.style.display = "none";
   })
 
   signInForm.addEventListener('submit', (event) => {
+    event.preventDefault();
 
-    const passwordInput = document.getElementById("signInPassword") 
-    let password = passwordInput.value;
+    let password = signInPassword.value;
 
-    // TODO: Add show password toggle
-
-    
-    
-    const id = userSignInModal.dataset.accountId;
+    // TODO: Add show password toggle    
+    const id = signInModal.dataset.accountId;
     let account;
     // determine account
     accounts.forEach(user => {
@@ -211,11 +221,8 @@ function loadSidebar() {
     }).catch((error) => {
       console.log("Error: ", error)
     });
+    // maybe don't close modal if something goes wrong:
   })
-
-  // maybe don't close modal if something goes wrong:
-
-
   function fetchUserInfo() {
     console.log("Fetching user info...")
     fetch('/api/retrieveUsers', {
@@ -240,9 +247,6 @@ function loadSidebar() {
     })
   }
   fetchUserInfo();
-
-
-
 }
 document.addEventListener('DOMContentLoaded', (event) => {
     loadSidebar()
