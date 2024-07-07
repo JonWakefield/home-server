@@ -132,3 +132,8 @@ function loadContent() {
 document.addEventListener('DOMContentLoaded', (event) => {
     loadContent()
 })
+
+function goBack() {
+    console.log("called")
+    window.history.back();
+}
