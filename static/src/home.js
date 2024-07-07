@@ -75,6 +75,13 @@ function loadContent() {
 
 
     function fetchUserInfo() {
+        userInfo = {
+            id: 1,
+            name: "Jon",
+            directory: "/app/users/jon",
+            total_storage: 0,
+        }
+        displayUserInfo();
         fetch('/api/getUserInfo', {
             method: "GET",
             headers: {
@@ -82,6 +89,12 @@ function loadContent() {
             }
         }).then(response => {
             if(!response.ok) {
+                userInfo = {
+                    id: 1,
+                    name: "Jon",
+                    directory: "/app/users/jon",
+                    total_storage: "",
+                }
                 throw new Error("Failed to retrieve content ", response.statusText)
             }
             return response.json()
@@ -112,7 +125,7 @@ function loadContent() {
             console.log("Error: ", error)
         })
     }
-    fetchUserInfo();
+    // fetchUserInfo();
     // fetchUserDirectory();
 }
 
