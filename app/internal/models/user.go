@@ -17,7 +17,10 @@ type User struct {
 	Directory    string  `json:"directory"`
 	CreatedAt    string  `json:"created_at"`
 	TotalStorage float32 `json:"total_storage"`
-	Token        string  `json:"token"`
+}
+
+type QueryValue interface {
+	string | int
 }
 
 const BasePath = "/app/users/"
@@ -60,7 +63,6 @@ func (user *User) CreateUser(db *sql.DB) (bool, error) {
 	}
 
 	startingStorage := 0.0
-	startingToken := ""
 
 	// hash password first
 	hashedPassword, err := user.hashPassword()
@@ -73,7 +75,7 @@ func (user *User) CreateUser(db *sql.DB) (bool, error) {
 	// create path
 	path := user.createPath()
 
-	insertUserQuery := `INSERT INTO Users (name, password, directory, created_at, total_storage, token) VALUES (?, ?, ?, ?, ?, ?)`
+	insertUserQuery := `INSERT INTO Users (name, password, directory, created_at, total_storage) VALUES (?, ?, ?, ?, ?)`
 	statement, err := db.Prepare(insertUserQuery)
 	if err != nil {
 		log.Printf("Failed to insert user into Database: %v", err)
@@ -81,7 +83,7 @@ func (user *User) CreateUser(db *sql.DB) (bool, error) {
 	}
 	defer statement.Close()
 
-	_, err = statement.Exec(user.Name, hashedPassword, path, curTime, startingStorage, startingToken)
+	_, err = statement.Exec(user.Name, hashedPassword, path, curTime, startingStorage)
 	if err != nil {
 		log.Printf("Failed to insert query into table `Users` %v", err)
 		return false, err
@@ -130,22 +132,19 @@ func RetrieveUsers(db *sql.DB) []User {
 	return users
 }
 
-func (user *User) retrieveUser(db *sql.DB) (User, error) {
+func RetrieveUser[value QueryValue](db *sql.DB, column string, v value) (User, error) {
 
 	var storedUser User
-	query := `SELECT * FROM Users WHERE id = ?`
-	err := db.QueryRow(query, user.ID).Scan(&storedUser.ID,
+	query := "SELECT * FROM Users WHERE " + column + " = ?"
+	err := db.QueryRow(query, v).Scan(&storedUser.ID,
 		&storedUser.Name,
 		&storedUser.Password,
 		&storedUser.Directory,
 		&storedUser.CreatedAt,
-		&storedUser.TotalStorage,
-		&storedUser.Token)
-
+		&storedUser.TotalStorage)
 	if err != nil {
 		return User{}, err
 	}
-	fmt.Println("Retrieved: ", storedUser.Password)
 	return storedUser, nil
 }
 
@@ -156,7 +155,7 @@ func (user *User) verifyPassword(hashedPassword string) bool {
 
 func (user *User) SignIn(db *sql.DB) (bool, error) {
 	// called on user sign in
-	retrUser, err := user.retrieveUser(db)
+	retrUser, err := RetrieveUser(db, "id", user.ID)
 	if err != nil {
 		log.Printf("Encountered an error retrieving user info: %v", err)
 		return false, err
@@ -173,9 +172,9 @@ func (user *User) SignIn(db *sql.DB) (bool, error) {
 
 func (user *User) StoreToken(db *sql.DB, token string) error {
 	// store login-token in sql
-	query := `UPDATE Users SET token = ? WHERE name = ?`
+	query := `INSERT INTO Tokens (user_id, token) VALUES (?, ?)`
 
-	_, err := db.Exec(query, token, user.Name)
+	_, err := db.Exec(query, user.ID, token)
 	if err != nil {
 		log.Printf("Failed to store token in Users Table: %v", err)
 		return err

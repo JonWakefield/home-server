@@ -3,13 +3,16 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"home-server/internal/db"
+	database "home-server/internal/db"
 	"home-server/internal/models"
 	"home-server/internal/utils"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+const TOKEN_LAST_LENGTH = 43_200 // 1 month
 
 func setupRouter(db *sql.DB) *gin.Engine {
 	// disable console color
@@ -78,6 +81,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 				"message": "Failed to retrieve user credentials",
 				"login":   false,
 			})
+			return
 		}
 		if !success {
 			// user provided the wrong password, inform...
@@ -99,6 +103,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 		// store token in db
 		err = user.StoreToken(db, token)
+
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Failed to store user token. Login Failed",
@@ -107,33 +112,61 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			return
 		}
 
-		c.SetCookie("login-token", token, 3600, "/", "", false, true)
+		c.SetCookie("login-token", token, TOKEN_LAST_LENGTH, "/", "", false, true)
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Successfully logged in",
 			"login":   true,
 		})
-
-		// Next:
-		// 1) Return `home page` content (/home)
-		// 2) retreive home page specifics (i.e files, folders...)
 	})
 
 	r.GET("/home", func(c *gin.Context) {
-		fmt.Println("Hit home!")
 		token, err := c.Cookie("login-token")
-		if err != nil || !utils.IsValidToken(db, token) {
-			fmt.Println("Not valid!")
+		if err != nil {
+			log.Printf("Could not find a token: %v", err)
+			c.Redirect(http.StatusTemporaryRedirect, "")
+			return
+		}
+		_, err = database.GetUserID(db, token) // if GetUserId doesn't find anything, it returns an error
+		if err != nil {
 			c.Redirect(http.StatusTemporaryRedirect, "")
 			return
 		}
 		c.File("/static/home.html")
 	})
 
+	r.GET("/api/getUserInfo", func(c *gin.Context) {
+
+		token, err := c.Cookie("login-token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"message": "Not Valid!",
+			})
+			return
+		}
+
+		user, err := models.RetrieveUser(db, "token", token)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed to retrieve user info",
+			})
+			return
+		}
+		userReturn := models.User{
+			ID:           user.ID,
+			Name:         user.Name,
+			TotalStorage: user.TotalStorage,
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"user_info": userReturn,
+		})
+
+	})
+
 	return r
 }
 
 func main() {
-	db := db.InitDB()
+	db := database.InitDB()
 	defer db.Close()
 
 	router := setupRouter(db)

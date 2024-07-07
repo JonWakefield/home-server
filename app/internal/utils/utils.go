@@ -2,9 +2,7 @@ package utils
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"encoding/hex"
-	"fmt"
 	"os"
 	"time"
 )
@@ -30,17 +28,4 @@ func GenerateToken() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
-}
-
-func IsValidToken(db *sql.DB, token string) bool {
-
-	var count int
-	query := `SELECT COUNT(*) FROM Users WHERE token = ?`
-	err := db.QueryRow(query, token).Scan(&count)
-	if err != nil {
-		fmt.Printf("Error validating user: %v", err)
-		return false
-	}
-	fmt.Println("Count: ", count)
-	return count > 0
 }
