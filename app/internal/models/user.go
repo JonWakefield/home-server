@@ -19,10 +19,6 @@ type User struct {
 	TotalStorage float32 `json:"total_storage"`
 }
 
-type QueryValue interface {
-	string | int
-}
-
 const BasePath = "/app/users/"
 
 func (user *User) hashPassword() (string, error) {
@@ -132,11 +128,11 @@ func RetrieveUsers(db *sql.DB) []User {
 	return users
 }
 
-func RetrieveUser[value QueryValue](db *sql.DB, column string, v value) (User, error) {
+func RetrieveUser(db *sql.DB, id int) (User, error) {
 
 	var storedUser User
-	query := "SELECT * FROM Users WHERE " + column + " = ?"
-	err := db.QueryRow(query, v).Scan(&storedUser.ID,
+	query := "SELECT * FROM Users WHERE Id = ?"
+	err := db.QueryRow(query, id).Scan(&storedUser.ID,
 		&storedUser.Name,
 		&storedUser.Password,
 		&storedUser.Directory,
@@ -155,7 +151,7 @@ func (user *User) verifyPassword(hashedPassword string) bool {
 
 func (user *User) SignIn(db *sql.DB) (bool, error) {
 	// called on user sign in
-	retrUser, err := RetrieveUser(db, "id", user.ID)
+	retrUser, err := RetrieveUser(db, user.ID)
 	if err != nil {
 		log.Printf("Encountered an error retrieving user info: %v", err)
 		return false, err

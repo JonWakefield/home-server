@@ -143,8 +143,15 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			})
 			return
 		}
-
-		user, err := models.RetrieveUser(db, "token", token)
+		userId, err := database.GetUserID(db, token)
+		if err != nil {
+			// TODO: add this is
+			// this probabily means the token is expired
+			log.Printf("Could not find a user for token: %v", err)
+			c.Redirect(http.StatusTemporaryRedirect, "")
+			return
+		}
+		user, err := models.RetrieveUser(db, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Failed to retrieve user info",
@@ -154,12 +161,12 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		userReturn := models.User{
 			ID:           user.ID,
 			Name:         user.Name,
+			Directory:    user.Directory,
 			TotalStorage: user.TotalStorage,
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"user_info": userReturn,
 		})
-
 	})
 
 	return r

@@ -1,6 +1,5 @@
 // change function to export if we incorporate multiple js files
 function loadSidebar() {
-  console.log("Loading sidebar...")
 
   let accounts;
   const userPanelClasses = {
@@ -232,7 +231,7 @@ function loadSidebar() {
     });
     // maybe don't close modal if something goes wrong:
   })
-  function fetchUserInfo() {
+  function fetchUsers() {
     console.log("Fetching user info...")
     fetch('/api/retrieveUsers', {
       method: "GET",
@@ -255,7 +254,7 @@ function loadSidebar() {
       // setup error message here
     })
   }
-  fetchUserInfo();
+  fetchUsers();
 }
 document.addEventListener('DOMContentLoaded', (event) => {
     loadSidebar()
