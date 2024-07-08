@@ -169,6 +169,10 @@ main {
   color: #0096FF;
 }
 
+.lred {
+  color: #B22222;
+}
+
 .btn-close {
   position: absolute;
   right: 15px;
@@ -289,9 +293,18 @@ main {
 
 .back-button {
   cursor: pointer;
-  margin-right: 25px;
+  margin-right: 20px;
 }
 
 .header-spacing {
   padding-left: 10px;
+}
+
+.file-upload-input {
+  display: none;
+}
+
+.icon-label {
+  font-size: 10px;
+  cursor: pointer;
 }

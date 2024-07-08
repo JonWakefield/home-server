@@ -8,6 +8,7 @@ import (
 	"home-server/internal/utils"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -166,6 +167,34 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"user_info": userReturn,
+		})
+	})
+
+	r.POST("/api/uploadFile", func(c *gin.Context) {
+
+		// unpack user data
+		id, _ := strconv.Atoi(c.PostForm("id"))
+		user := models.User{
+			ID:        id,
+			Name:      c.PostForm("name"),
+			Directory: c.PostForm("directory"),
+		}
+		// unpack uploaded file
+		file, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"Message": "No file received",
+			})
+			return
+		}
+		success := user.SaveFile(c, db, file)
+		if !success {
+			return
+		}
+		// return success to user
+		// TODO calc new user storage
+		c.JSON(http.StatusOK, gin.H{
+			"status": "success",
 		})
 	})
 

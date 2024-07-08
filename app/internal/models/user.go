@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"home-server/internal/utils"
 	"log"
+	"mime/multipart"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -176,4 +179,16 @@ func (user *User) StoreToken(db *sql.DB, token string) error {
 		return err
 	}
 	return nil
+}
+
+func (user *User) SaveFile(c *gin.Context, db *sql.DB, file *multipart.FileHeader) bool {
+
+	filePath := fmt.Sprintf("%s/%s", user.Directory, file.Filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"Message": "Failed to save the file",
+		})
+		return false
+	}
+	return true
 }
