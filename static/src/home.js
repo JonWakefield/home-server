@@ -196,26 +196,27 @@ function loadContent() {
         })
 
     }
-    function fetchUserDirectory(path) {
-        fetch('/api/getUserDir', {
+    function fetchDirContent(path) {
+        fetch('/api/getDirContent', {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-            }
+            },
+            body: JSON.stringify(userInfo)
         }).then(response => {
             if(!response.ok) {
                 throw new Error("Failed to retrieve content ", response.statusText)
             }
             return response.json()
         }).then(data => {
-            dirContent = data.dir_content
-            console.log("Content: ", dirContent)
+            let files = data.files
+            console.log("Content: ", files)
         }).catch(error => {
             console.log("Error: ", error)
         })
     }
     fetchUserInfo();
-    // fetchUserDirectory();
+    fetchDirContent();
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {

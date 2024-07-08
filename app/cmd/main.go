@@ -5,6 +5,8 @@ import (
 	"fmt"
 	database "home-server/internal/db"
 	"home-server/internal/models"
+	"home-server/internal/router/auth"
+	"home-server/internal/router/home"
 	"home-server/internal/utils"
 	"log"
 	"net/http"
@@ -137,21 +139,11 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 	r.GET("/api/getUserInfo", func(c *gin.Context) {
 
-		token, err := c.Cookie("login-token")
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"message": "Not Valid!",
-			})
+		userId, valid := auth.VerifyToken(c, db)
+		if !valid {
 			return
 		}
-		userId, err := database.GetUserID(db, token)
-		if err != nil {
-			// TODO: add this is
-			// this probabily means the token is expired
-			log.Printf("Could not find a user for token: %v", err)
-			c.Redirect(http.StatusTemporaryRedirect, "")
-			return
-		}
+
 		user, err := models.RetrieveUser(db, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -167,6 +159,42 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"user_info": userReturn,
+		})
+	})
+
+	r.POST("/api/getDirContent", func(c *gin.Context) {
+
+		userId, valid := auth.VerifyToken(c, db)
+		if !valid {
+			return
+		}
+		var user models.User
+
+		if err := c.ShouldBindJSON(&user); err != nil {
+			fmt.Println("No user found! checking cookies user...")
+			// no user data sent, use userId obtained from VerifyToken
+			user, err = models.RetrieveUser(db, userId)
+			if err != nil {
+				// didnt receive a user, return
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+		}
+
+		// get the content from the users directory, return file names back to user
+		contents, err := home.GetFileNames(user.Directory)
+		if err != nil {
+			log.Printf("Error reading in file names: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "Failed read in file names",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"status": "Success",
+			"files":  contents,
 		})
 	})
 
@@ -191,10 +219,24 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		if !success {
 			return
 		}
-		// return success to user
-		// TODO calc new user storage
+		// TODO Need to get users root path
+		// ...
+
+		// get users new storage space used
+		size, err := utils.GetUserStorageAmt(user.Directory)
+		if err != nil {
+			log.Printf("Encountered error calculating users storage: %v", err)
+			// TODO Handle error (file was saved successfully so ...)
+		}
+		// TODO store new size in database
+
+		// TODO also send filename back to the user and display on the UI
+
+		fmt.Println("Directory total size: ", size)
+
 		c.JSON(http.StatusOK, gin.H{
-			"status": "success",
+			"status":  "success",
+			"storage": size,
 		})
 	})
 
