@@ -134,6 +134,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			c.Redirect(http.StatusTemporaryRedirect, "")
 			return
 		}
+		fmt.Println("Serving home_test.html")
 		c.File("/static/home.html")
 	})
 

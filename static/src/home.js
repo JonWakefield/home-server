@@ -211,6 +211,7 @@ function loadContent() {
         }).then(data => {
             let files = data.files
             console.log("Content: ", files)
+            loadFilesDOM(files)
         }).catch(error => {
             console.log("Error: ", error)
         })
@@ -250,6 +251,18 @@ document.getElementById("fileUpload").addEventListener('change', (event) => {
         });
     }
 })
+
+
+function loadFilesDOM(files) {
+
+    Object.keys(files).forEach(key => {
+        console.log("Key: ", key)
+        let vals = files[key]
+        
+        
+    })
+
+}
 
 function goBack() {
     console.log("called")
