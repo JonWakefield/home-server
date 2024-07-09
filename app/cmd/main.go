@@ -16,6 +16,7 @@ import (
 )
 
 const TOKEN_LAST_LENGTH = 43_200 // 1 month
+const BASE_SIZE = 1000           // unit: Kb
 
 func setupRouter(db *sql.DB) *gin.Engine {
 	// disable console color
@@ -226,19 +227,27 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		// get users new storage space used
 		size, err := utils.GetUserStorageAmt(user.Directory)
 
+		// convert to kb (use kb as base unit)
+		sizeConv := utils.UnitConverter(size, BASE_SIZE)
+
 		if err != nil {
 			log.Printf("Encountered error calculating users storage: %v", err)
 			// TODO Handle error (file was saved successfully so ...)
 		}
-		user.TotalStorage = size
-		go user.UpdateStorageAmt(db)
+		user.TotalStorage = sizeConv
+		user.UpdateStorageAmt(db)
 
-		fmt.Println("Directory total size: ", size)
+		fmt.Println("Directory total size: ", sizeConv)
 
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "success",
 			"storage": size,
 		})
+	})
+
+	r.POST("/api/downloadFile", func(c *gin.Context) {
+
+		fmt.Println("in download file...")
 	})
 
 	return r

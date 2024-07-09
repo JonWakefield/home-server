@@ -46,3 +46,7 @@ func GetUserStorageAmt(path string) (int64, error) {
 	})
 	return totalSize, err
 }
+
+func UnitConverter(size int64, unit int64) float64 {
+	return float64(size) / float64(unit)
+}

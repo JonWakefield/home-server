@@ -14,12 +14,12 @@ import (
 
 // theses structs are sorta crap,is there is a way to combine these two structs ?
 type User struct {
-	ID           int    `json:"id"`
-	Name         string `json:"name"`
-	Password     string `json:"password"`
-	Directory    string `json:"directory"`
-	CreatedAt    string `json:"created_at"`
-	TotalStorage int64  `json:"total_storage"`
+	ID           int     `json:"id"`
+	Name         string  `json:"name"`
+	Password     string  `json:"password"`
+	Directory    string  `json:"directory"`
+	CreatedAt    string  `json:"created_at"`
+	TotalStorage float64 `json:"total_storage"`
 }
 
 const BasePath = "/app/users/"
@@ -111,7 +111,7 @@ func RetrieveUsers(db *sql.DB) []User {
 	users := make([]User, 0)
 	for rows.Next() {
 		var name string
-		var storage int64
+		var storage float64
 		var id int
 		if err := rows.Scan(&id, &name, &storage); err != nil {
 			log.Printf("Error reading in user info: %v", err)
