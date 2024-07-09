@@ -190,3 +190,30 @@ main {
 .navbar {
   padding: .75rem 1rem;
 }
+
+.bi-file {
+  display: inline-block;
+  width: 3rem;
+  height: 3rem;
+  vertical-align: -.125em;
+  fill: currentColor;  
+}
+
+.file-spacing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-right: 40px;
+  padding-left: 40px;
+}
+
+.file-label {
+  font-size: 12px;
+  text-align: center;
+  color: #000;
+}
+
+.file-spacing:hover {
+  color: #33A1FF;
+  cursor: pointer;
+}

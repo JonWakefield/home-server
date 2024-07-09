@@ -225,13 +225,13 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 		// get users new storage space used
 		size, err := utils.GetUserStorageAmt(user.Directory)
+
 		if err != nil {
 			log.Printf("Encountered error calculating users storage: %v", err)
 			// TODO Handle error (file was saved successfully so ...)
 		}
-		// TODO store new size in database
-
-		// TODO also send filename back to the user and display on the UI
+		user.TotalStorage = size
+		go user.UpdateStorageAmt(db)
 
 		fmt.Println("Directory total size: ", size)
 

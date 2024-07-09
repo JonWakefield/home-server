@@ -14,12 +14,12 @@ import (
 
 // theses structs are sorta crap,is there is a way to combine these two structs ?
 type User struct {
-	ID           int     `json:"id"`
-	Name         string  `json:"name"`
-	Password     string  `json:"password"`
-	Directory    string  `json:"directory"`
-	CreatedAt    string  `json:"created_at"`
-	TotalStorage float32 `json:"total_storage"`
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Password     string `json:"password"`
+	Directory    string `json:"directory"`
+	CreatedAt    string `json:"created_at"`
+	TotalStorage int64  `json:"total_storage"`
 }
 
 const BasePath = "/app/users/"
@@ -111,7 +111,7 @@ func RetrieveUsers(db *sql.DB) []User {
 	users := make([]User, 0)
 	for rows.Next() {
 		var name string
-		var storage float32
+		var storage int64
 		var id int
 		if err := rows.Scan(&id, &name, &storage); err != nil {
 			log.Printf("Error reading in user info: %v", err)
@@ -191,4 +191,14 @@ func (user *User) SaveFile(c *gin.Context, db *sql.DB, file *multipart.FileHeade
 		return false
 	}
 	return true
+}
+
+func (user *User) UpdateStorageAmt(db *sql.DB) {
+
+	query := `UPDATE Users SET total_storage = ? WHERE id = ?`
+
+	_, err := db.Exec(query, user.TotalStorage, user.ID)
+	if err != nil {
+		log.Printf("Failed to update usere storage amount: %v ", err)
+	}
 }
