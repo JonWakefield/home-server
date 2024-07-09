@@ -1,4 +1,5 @@
 let userInfo;
+let selectedFile = null;
 
 // TODO FIND CORRECT NUMBER
 const FILES_PER_ROW = 8 
@@ -118,8 +119,9 @@ function loadContent() {
         
         // apply text
         smallLabel.textContent = "Storage Used:";
-        // TODO Need function to calc to display Mb or Kb or Gb 
-        smallAmt.textContent = `${userInfo.total_storage} Mb`; 
+
+        // TODO Need function to calc to display Mb or Kb or Gb
+        smallAmt.textContent = `${userInfo.total_storage} Kb`; 
 
         // create storage svg
         svg = createFloppySVG();
@@ -260,13 +262,13 @@ function loadContent() {
             }).then(data => {
                 console.log('Success: ', data);
 
-                fetchDirContent();
+                // TODO need to add file to UI
+                // fetchDirContent();
             }).catch((error) => {
                 console.error("Error: ", error);
             });
         }
     })
-
 
     fetchUserInfo();
     fetchDirContent();
@@ -372,10 +374,67 @@ function loadFilesDOM(files) {
         numFiles++;
         
     })
+    addFileListeners();
+}
 
+function addFileListeners() {
+    document.querySelectorAll('.file-spacing').forEach(item => {
+        item.addEventListener('click', function() {
+            // TODO figure out how to deselect the cur. selected file
+    
+            // remove from previous file
+            if (selectedFile) {
+                selectedFile.classList.remove('selected-file');
+            }
+
+            // add selected file to the item
+            item.classList.add('selected-file');
+            
+            // update reference
+            selectedFile = item;
+    
+            // can perform other options here as well...
+            // ...
+        })
+    })
+}
+
+// download file button
+function downloadFile() {
+    console.log("Downloading...")
+    file = selectedFile;
+    if (!file) {
+        // TODO add some type of alert
+        console.log("could not find a file...")
+    }
+
+    let fileName = file.querySelector('label').textContent
+    let payload = {
+        fileName: fileName,
+        path: userInfo.directory,
+    }
+
+
+    fetch('/api/downloadFile', {
+        method: 'POST',
+        headers: {
+            'Content-Type': "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error("Failed to retrieve content ", response.statusText);
+        }
+        return response.json()
+    }).then(data => {
+        console.log("Response: ", data)
+    }).catch(error => {
+        console.log("Error received: ", error)
+    })
 }
 
 function goBack() {
     console.log("called")
     window.history.back();
 }
+

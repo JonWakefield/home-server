@@ -112,7 +112,7 @@ function loadSidebar() {
         elementStrong.textContent = name; 
 
         // TODO calc if we should display kb or mb  
-        elementSmall.textContent = `[${totalStorage} Mb]`
+        elementSmall.textContent = `[${totalStorage} Kb]`
         
         let svg = createSvg()
 

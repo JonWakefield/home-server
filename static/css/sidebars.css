@@ -213,7 +213,17 @@ main {
   color: #000;
 }
 
-.file-spacing:hover {
-  color: #33A1FF;
+.file-spacing svg:hover {
+  /* color: #33A1FF; */
+  background-color: #ccc;
+  border-radius: 5px;
   cursor: pointer;
+  transition: 0.3s;
+}
+
+.selected-file svg {
+  color: #33A1FF;
+  transition: 0.3s;
+  /* border: 2px solid blue;
+  border-radius: 4px; */
 }
