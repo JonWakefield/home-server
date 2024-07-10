@@ -18,7 +18,7 @@
             <div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-body-tertiary" style="width: 255px;">
               <div class="sidebar-header d-flex align-items-center flex-shrink-0 p-3 link-body-emphasis text-decoration-none
               border-bottom">
-                <span class="fs-4 fw-semibold">Accounts</span>
+                <span class="fs-3 fw-semibold">Accounts</span>
                 <svg id="openAccModal" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                   class="bi bi-plus-lg" viewBox="0 0 16 16">
                   <path fill-rule="evenodd"
@@ -46,11 +46,10 @@
           <span type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></span>
         </div>
         <div class="modal-body p-5 pt-0">
-          <form id="modalForm" class="">
+          <form id="modalForm" class="form">
             <div class="form-floating mb-3">
               <input type="name" class="form-control rounded-3" id="createAccName" placeholder="name">
               <label for="createAccName">Name</label>
-              <label class="err-name"></label>
             </div>
             <div class="form-floating mb-3">
               <input type="password" class="form-control rounded-3" id="createAccPassword" placeholder="Password">
@@ -61,6 +60,7 @@
             </div>
             <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" id="createAcc" type="submit">Create
               Account</button>
+              <label id="createAccError" class="err-label"></label>
             <hr class="my-4">
           </form>
         </div>
@@ -86,6 +86,7 @@
               <input type="checkbox" id="showPasswordSignIn" class="showPassword"> Show Password
             </div>
             <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" id="loginBut" type="submit">Access</button>
+            <label id="signInError" class="err-label"></label>
             <hr class="my-1">
           </form>
         </div>

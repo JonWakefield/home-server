@@ -21,11 +21,13 @@ function loadSidebar() {
   let createAccName = document.getElementById('createAccName');
   let createAccPassword = document.getElementById('createAccPassword');
   let showPasswordCreateAcc = document.getElementById("showPasswordCreateAcc")
+  let createAccError = document.getElementById("createAccError");
   
   // ---- Sign in Modal ---
   let signInModal = document.getElementById("signInModal");
   let signInPassword = document.getElementById("signInPassword");
   let showPasswordSignIn = document.getElementById("showPasswordSignIn")
+  let signInError = document.getElementById("signInError");
 
   // When the user clicks on the button, open the modal
   openCreateAccModal.onclick = function() {
@@ -51,6 +53,8 @@ function loadSidebar() {
   closeSignInModal.onclick = function() {
     signInModal.style.display = "none";
     signInPassword.value = "";
+    signInError.style.display = "none";
+    signInPassword.classList.remove("err-input");
   }
 
   // When the user clicks anywhere outside of the modal, close it
@@ -59,10 +63,16 @@ function loadSidebar() {
         createAccModal.style.display = "none";
         createAccPassword.value = "";
         createAccName.value = "";
+        createAccError.style.display = "none";
+        createAccName.classList.remove("err-input");
+        createAccPassword.classList.remove("err-input");
+
         showPasswordCreateAcc.checked = false;
       } else if (event.target == signInModal) {
         signInModal.style.display = "none";
         signInPassword.value = "";
+        signInError.style.display = "none";
+        signInPassword.classList.remove("err-input");
       }
   }
 
@@ -164,14 +174,23 @@ function loadSidebar() {
     const password = createAccPassword.value
     if(!verifyName(name)) {
       // handle cases when user didnt input any values
-      // TODO display error message under box
-      console.log("Invalid username!")
+      createAccName.classList.add("err-input");
+      createAccError.textContent = "Invalid Name"
+      createAccError.style.display = "block";
       return
+    } else {
+      createAccName.classList.remove("err-input");
+      createAccError.style.display = "none";
     }
     if(!password) {
       // handle cases when user didnt input any values
-      console.log("No password entered!")
+      createAccPassword.classList.add("err-input");
+      createAccError.textContent = "Please enter a password"
+      createAccError.style.display = "block";
       return
+    } else {
+      createAccPassword.classList.remove("err-input");
+      createAccError.style.display = "none";
     }
 
     let user = {
@@ -190,21 +209,29 @@ function loadSidebar() {
           console.log('Success:', data);
             // IF response comes back SUCCESS (200), reload page
             window.location.reload()
+            createAccModal.style.display = "none";
       })
       .catch((error) => {
           console.error('Error:', error);
           // Handle errors here
-      });
+          // TODO Display error to user:
 
-    // maybe don't close modal if something goes wrong:
-    createAccModal.style.display = "none";
+      });
   })
 
   signInForm.addEventListener('submit', (event) => {
     event.preventDefault();
 
     let password = signInPassword.value;
-
+    if (!password) {
+      signInPassword.classList.add('err-input');
+      signInError.textContent = "Please enter a password"
+      signInError.style.display = "block";
+      return;
+    } else {
+      signInPassword.classList.remove('err-input');
+      signInError.style.display = "none";
+    }
     const id = signInModal.dataset.accountId;
     let account;
     // determine account
@@ -233,16 +260,18 @@ function loadSidebar() {
       if (login) {
         // redirect user to there home page 
         window.location.href = "/home";
+        signInModal.style.display = "none";
+        signInPassword.value = "";
+        signInError.style.display = "none";
       } else {
-        // TODO: display failed to login message
-
+        signInError.textContent = "Invalid Password"
+        signInError.style.display = "block";
       }
     }).catch((error) => {
       console.log("Error: ", error)
+      signInError.textContent = "Error: " + error
+      signInError.style.display = "block";
     });
-    // maybe don't close modal if something goes wrong:
-    signInPassword.value = "";
-    signInModal.style.display = "none";
   })
   function fetchUsers() {
     console.log("Fetching user info...")
