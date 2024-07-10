@@ -148,16 +148,30 @@ function loadSidebar() {
       }
   }
 
+  function verifyName(name) {
+    // verify the entered name is valid
+    // Define a regular expression for allowed characters (alphanumeric and underscore)
+    const allowedCharacters = /^[a-zA-Z0-9_]+$/;
+    
+    // Test the username against the regular expression
+    return allowedCharacters.test(name);
+  }
+
   createAccForm.addEventListener('submit', (event) => {
     event.preventDefault(); //removing preventDefault causes the page to reload
 
     const name = createAccName.value
     const password = createAccPassword.value
-    if(!name) {
+    if(!verifyName(name)) {
       // handle cases when user didnt input any values
+      // TODO display error message under box
+      console.log("Invalid username!")
+      return
     }
     if(!password) {
       // handle cases when user didnt input any values
+      console.log("No password entered!")
+      return
     }
 
     let user = {
@@ -227,6 +241,8 @@ function loadSidebar() {
       console.log("Error: ", error)
     });
     // maybe don't close modal if something goes wrong:
+    signInPassword.value = "";
+    signInModal.style.display = "none";
   })
   function fetchUsers() {
     console.log("Fetching user info...")
@@ -265,8 +281,6 @@ function getStorageUnits(size) {
   // this function assumes two decimal points of precision
   size = size.toString()
   let len = size.length
-  console.log(size)
-  console.log(len)
   if (len <= 6) {
     return ["KB", size];
   }  else if (len > 6 && len <= 9) {
