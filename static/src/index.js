@@ -21,11 +21,11 @@ function loadSidebar() {
   let createAccName = document.getElementById('createAccName');
   let createAccPassword = document.getElementById('createAccPassword');
   let showPasswordCreateAcc = document.getElementById("showPasswordCreateAcc")
-  let showPasswordSignIn = document.getElementById("showPasswordSignIn")
-
+  
   // ---- Sign in Modal ---
   let signInModal = document.getElementById("signInModal");
   let signInPassword = document.getElementById("signInPassword");
+  let showPasswordSignIn = document.getElementById("showPasswordSignIn")
 
   // When the user clicks on the button, open the modal
   openCreateAccModal.onclick = function() {
@@ -45,7 +45,7 @@ function loadSidebar() {
     createAccModal.style.display = "none";
     createAccPassword.value = "";
     createAccName.value = "";
-    showPassword.checked = false;
+    showPasswordCreateAcc.checked = false;
   }
   // close enter password modal
   closeSignInModal.onclick = function() {
@@ -59,7 +59,7 @@ function loadSidebar() {
         createAccModal.style.display = "none";
         createAccPassword.value = "";
         createAccName.value = "";
-        showPassword.checked = false;
+        showPasswordCreateAcc.checked = false;
       } else if (event.target == signInModal) {
         signInModal.style.display = "none";
         signInPassword.value = "";
@@ -111,8 +111,9 @@ function loadSidebar() {
         
         elementStrong.textContent = name; 
 
-        // TODO calc if we should display kb or mb  
-        elementSmall.textContent = `[${totalStorage} Kb]`
+        // display appropriate unit size
+        const [units, size] = getStorageUnits(totalStorage)
+        elementSmall.textContent = `[${size} ${units}]`
         
         let svg = createSvg()
 
@@ -173,11 +174,8 @@ function loadSidebar() {
       .then(response => response.json())
       .then(data => {
           console.log('Success:', data);
-            // IF response comes back SUCCESS (200)
-            // then ... add account to home page (need to query database on loadup and display all accounts)
-            // maybe do a page re-load to update accounts on UI?
-            createAccPassword.value = "";
-            createAccName.value = "";
+            // IF response comes back SUCCESS (200), reload page
+            window.location.reload()
       })
       .catch((error) => {
           console.error('Error:', error);
@@ -193,7 +191,6 @@ function loadSidebar() {
 
     let password = signInPassword.value;
 
-    // TODO: Add show password toggle    
     const id = signInModal.dataset.accountId;
     let account;
     // determine account
@@ -259,3 +256,23 @@ function loadSidebar() {
 document.addEventListener('DOMContentLoaded', (event) => {
     loadSidebar()
 })
+
+
+// Could export function to a utils file
+function getStorageUnits(size) {
+  // determine where we should display kb, mb or gb for on UI
+  // default units retrieved from backend are kb
+  // this function assumes two decimal points of precision
+  size = size.toString()
+  let len = size.length
+  console.log(size)
+  console.log(len)
+  if (len <= 6) {
+    return ["KB", size];
+  }  else if (len > 6 && len <= 9) {
+    size = size / 1000
+    return ["MB", size]
+  }
+  size = size / (1000 * 1000)
+  return ["GB", size]
+}
