@@ -48,7 +48,7 @@ func createTokensTable(db *sql.DB) {
 
 func GetUserID(db *sql.DB, token string) (int, error) {
 	var userId int
-	query := `SELECT COUNT(*) user_id FROM Tokens WHERE token = ?`
+	query := `SELECT user_id FROM Tokens WHERE token = ?`
 	err := db.QueryRow(query, token).Scan(&userId)
 	if err != nil {
 		fmt.Printf("Error validating user: %v", err)

@@ -68,10 +68,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 	})
 
 	r.POST("/api/signin", func(c *gin.Context) {
-		fmt.Println("Trying login...")
-
 		var user models.User
-
 		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -82,15 +79,15 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		success, err := user.SignIn(db)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to retrieve user credentials",
-				"login":   false,
+				"error": err.Error(),
+				"login": false,
 			})
 			return
 		}
 		if !success {
 			// user provided the wrong password, inform...
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"message": "login failed. invalid credentials.",
+				"message": "Login failed. Invalid credentials.",
 				"login":   false,
 			})
 			return
@@ -104,10 +101,8 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			})
 			return
 		}
-
 		// store token in db
 		err = user.StoreToken(db, token)
-
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Failed to store user token. Login Failed",
@@ -115,7 +110,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			})
 			return
 		}
-
 		c.SetCookie("login-token", token, TOKEN_LAST_LENGTH, "/", "", false, true)
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Successfully logged in",
@@ -124,24 +118,17 @@ func setupRouter(db *sql.DB) *gin.Engine {
 	})
 
 	r.GET("/home", func(c *gin.Context) {
-		token, err := c.Cookie("login-token")
-		if err != nil {
-			log.Printf("Could not find a token: %v", err)
-			c.Redirect(http.StatusTemporaryRedirect, "")
+		_, valid := auth.VerifyToken(c, db)
+		if !valid {
 			return
 		}
-		_, err = database.GetUserID(db, token) // if GetUserId doesn't find anything, it returns an error
-		if err != nil {
-			c.Redirect(http.StatusTemporaryRedirect, "")
-			return
-		}
-		fmt.Println("Serving home_test.html")
 		c.File("/static/home.html")
 	})
 
 	r.GET("/api/getUserInfo", func(c *gin.Context) {
 
 		userId, valid := auth.VerifyToken(c, db)
+		fmt.Println("User Id from token: ", userId)
 		if !valid {
 			return
 		}
@@ -173,7 +160,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		var user models.User
 
 		if err := c.ShouldBindJSON(&user); err != nil {
-			fmt.Println("No user found! checking cookies user...")
+			// fmt.Println("No user found! checking cookies user...")
 			// no user data sent, use userId obtained from VerifyToken
 			user, err = models.RetrieveUser(db, userId)
 			if err != nil {
