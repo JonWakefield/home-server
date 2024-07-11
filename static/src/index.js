@@ -206,7 +206,7 @@ function loadSidebar() {
       })
       .then(response => {
         if (!response.ok) {
-          createAccError.textContent = "HTTP Error: " + response.status
+          createAccError.textContent = "HTTP Error: " + response.statusText
           createAccError.style.display = "block";
         }
         return response.json();
@@ -259,7 +259,7 @@ function loadSidebar() {
       body: JSON.stringify(userCreds)
     }).then(response => {
       if (!response.ok) {
-        signInError.textContent = "HTTP Error: " + response.status
+        signInError.textContent = "HTTP Error: " + response.statusText
         signInError.style.display = "block";
       }
       return response.json();

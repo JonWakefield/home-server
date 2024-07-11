@@ -258,16 +258,19 @@ function loadContent() {
                 method: "POST",
                 body: formData,
             }).then(response => {
-                response.json()
+                if (!response.ok) {
+                    // TODO: display banner message indicating failed upload
+                }
+                return response.json()
             }).then(data => {
                 console.log('Success: ', data);
-
                 // TODO need to add file to UI
                 // fetchDirContent();
             }).catch((error) => {
+                // TODO: Display banner message indicating failed upload
                 console.error("Error: ", error);
             });
-        }
+        } 
     })
 
     fetchUserInfo();
@@ -406,6 +409,7 @@ function downloadFile() {
     if (!file) {
         // TODO add some type of alert
         console.log("could not find a file...")
+        return
     }
 
     let fileName = file.querySelector('label').textContent
@@ -413,7 +417,6 @@ function downloadFile() {
         fileName: fileName,
         path: userInfo.directory,
     }
-
 
     fetch('/api/downloadFile', {
         method: 'POST',
@@ -423,11 +426,26 @@ function downloadFile() {
         body: JSON.stringify(payload)
     }).then(response => {
         if (!response.ok) {
+            // TODO add error to banner
             throw new Error("Failed to retrieve content ", response.statusText);
         }
-        return response.json()
-    }).then(data => {
-        console.log("Response: ", data)
+        return response.blob(); 
+    }).then(file => {
+        const urlObject = window.URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = urlObject;
+
+        // Extract the file name from the URL
+        const filename = fileName
+        link.download = filename;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // release the object URL
+        window.URL.revokeObjectURL(urlObject);
+        
     }).catch(error => {
         console.log("Error received: ", error)
     })

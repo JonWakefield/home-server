@@ -117,6 +117,8 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		})
 	})
 
+	// ---- home page routes ------
+
 	r.GET("/home", func(c *gin.Context) {
 		_, valid := auth.VerifyToken(c, db)
 		if !valid {
@@ -159,7 +161,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		var user models.User
 
 		if err := c.ShouldBindJSON(&user); err != nil {
-			// fmt.Println("No user found! checking cookies user...")
 			// no user data sent, use userId obtained from VerifyToken
 			user, err = models.RetrieveUser(db, userId)
 			if err != nil {
@@ -207,7 +208,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		if !success {
 			return
 		}
-		// TODO Need to get users root path
+		// TODO Need to get users root path why ??
 		// ...
 
 		// get users new storage space used
@@ -221,9 +222,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		}
 		user.TotalStorage = sizeConv
 		user.UpdateStorageAmt(db)
-
 		fmt.Println("Directory total size: ", sizeConv)
-
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "success",
 			"storage": size,
@@ -231,8 +230,23 @@ func setupRouter(db *sql.DB) *gin.Engine {
 	})
 
 	r.POST("/api/downloadFile", func(c *gin.Context) {
+		// verify user token
+		_, valid := auth.VerifyToken(c, db)
+		if !valid {
+			return
+		}
 
-		fmt.Println("in download file...")
+		var payload home.DownloadFilePayload
+
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			// did not successfully receive payload from user
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "No payload uploaded",
+			})
+			return
+		}
+		home.DownloadFile(c, payload.FileName, payload.Path)
+		fmt.Println("File sent back...")
 	})
 
 	return r
