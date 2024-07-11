@@ -275,6 +275,33 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			"message": "Successfully renamed file",
 		})
 	})
+
+	r.POST("/api/deleteFile", func(c *gin.Context) {
+		// verify user token
+		_, valid := auth.VerifyToken(c, db)
+		if !valid {
+			return
+		}
+		var payload home.Payload
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "No payload found.",
+			})
+			return
+		}
+		err := payload.DeleteFile()
+		if err != nil {
+			log.Printf("Failed to Delete file. Error: %v ", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed to Delete file",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Successfully Deleted file",
+		})
+	})
+
 	return r
 }
 

@@ -292,3 +292,14 @@ main {
   font-size: 14.5px;
   font-style: italic; 
 }
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.small-modal {
+  width: 60%;
+}

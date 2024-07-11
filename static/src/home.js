@@ -42,6 +42,29 @@ function loadContent() {
     let oldNameLabel = document.getElementById("oldFileName");
     let closeRenameModal = document.getElementsByClassName("btn-close")[0];
 
+    // --- Delete File interactions ---
+    let delFile = document.getElementById('delFile')
+    let deleteFileModal = document.getElementById('deleteModal');
+    let deleteFileForm = document.getElementById('deleteForm');
+    let delError = document.getElementById('delError');
+    let closeDeleteModal = document.getElementsByClassName("btn-close")[1];
+    let delFileLabel = document.getElementById('delFileName');
+
+    delFile.onclick = function() {
+        if (!selectedFile) {
+            // TODO display banner saying to select a file
+            return
+        }
+        delFileLabel.textContent = selectedFile.querySelector('label').textContent
+        deleteFileModal.style.display = "block";
+    }
+    closeDeleteModal.onclick = function() {
+        deleteFileModal.style.display = "none";
+        delError.textContent = "";
+        delError.style.display = "none";
+    }
+
+
     renameFile.onclick = function() {
         if (!selectedFile) {
             // TODO display banner saying to select a file
@@ -49,7 +72,6 @@ function loadContent() {
         }
         oldNameLabel.textContent = selectedFile.querySelector('label').textContent
         renameFileModal.style.display = "block";
-        
     }
     closeRenameModal.onclick = function() {
         renameFileModal.style.display = "none";
@@ -63,7 +85,40 @@ function loadContent() {
         renameErr.textContent = ""
         renameErr.style.display = "none";
         }
+         else if (event.target == deleteFileModal) {
+            deleteFileModal.style.display = "none";
+            delError.textContent = "";
+            delError.style.display = "none";
+        }
     }
+
+    deleteFileForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        let fName = delFileLabel.textContent;
+        let payload = {
+            fileName: fName,
+            path: userInfo.directory,
+        }
+
+        fetch('/api/deleteFile', {
+            method: "POST",
+            headers: {
+                'Content-Type': "application/json",
+            },
+            body: JSON.stringify(payload)
+        }).then(response => {
+            if (!response.ok) {
+                // TODO add error message
+            }
+            return response.json()
+        }).then(data => {
+            console.log("Response: ", data)
+
+        }).catch(e => {
+            console.error("Error received: ", e)
+        })
+    })
+
 
     // can probably be combined with the validatename function from index.js
     function validName(name) {
@@ -521,6 +576,10 @@ function addFileListeners() {
             // ...
         })
     })
+}
+
+function deleteFile() {
+    console.log("Deleting File...")
 }
 
 // download file button

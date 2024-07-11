@@ -10,6 +10,7 @@ import (
 
 type DirContents map[string][]string
 
+// I hate this struct name
 type Payload struct {
 	NewFileName string `json:"newFileName"`
 	FileName    string `json:"fileName"`
@@ -53,4 +54,15 @@ func (load *Payload) RenameFile() error {
 	}
 	return nil
 
+}
+
+func (load *Payload) DeleteFile() error {
+	// delete file
+	fullPath := load.Path + "/" + load.FileName
+
+	err := os.Remove(fullPath)
+	if err != nil {
+		return err
+	}
+	return nil
 }
