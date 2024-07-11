@@ -18,6 +18,7 @@ let numFiles = 0;
 let rowDiv = document.createElement('div');
 let main = document.getElementById('main');
 
+
 function addFile() {
     // adds file to the DOM
 }
@@ -31,6 +32,46 @@ function loadContent() {
         smallStorage: "lp lblue",
         smallDelete: "lp lred",
     }
+
+    // --- Rename file interactions ---
+    let renameFile = document.getElementById("renameFile");
+    let renameFileModal = document.getElementById("renameModal");
+    let renameForm = document.getElementById("renameForm");
+    let renameInput = document.getElementById("renameInput");
+    let oldNameLabel = document.getElementById("oldFileName");
+    let closeRenameModal = document.getElementsByClassName("btn-close")[0];
+
+    renameFile.onclick = function() {
+        if (!selectedFile) {
+            // TODO display banner saying to select a file
+            return
+        }
+        oldNameLabel.textContent = selectedFile.querySelector('label').textContent
+        renameFileModal.style.display = "block";
+        
+    }
+    closeRenameModal.onclick = function() {
+        renameFileModal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == renameFileModal) {
+        renameFileModal.style.display = "none";
+        }
+    }
+
+    renameForm.addEventListener('submit', (event) => {
+        let oldName = oldNameLabel.textContent;
+        let newName = renameInput.value; 
+        if (!newName) {
+            // TODO: display error label
+            // TODO actually need to check the new name of the file is valid (no spaces)
+            return
+        }
+        RenameFile(event, oldName, newName)
+    })
+
+
 
     function displayDeleteAccPanel() {
 
@@ -445,9 +486,41 @@ function downloadFile() {
 
         // release the object URL
         window.URL.revokeObjectURL(urlObject);
-        
+
     }).catch(error => {
         console.log("Error received: ", error)
+    })
+}
+
+function RenameFile(event, oldName, newName) {
+    event.preventDefault();
+    // send request to api, renaming selected file
+    console.log("Renaming file...")
+    let payload = {
+        newFileName: newName,
+        fileName: oldName,
+        path: userInfo.directory,
+    }
+
+    console.log(payload)
+
+    fetch('/api/renamefile', {
+        method: "POST",
+        headers: {
+            'Content-Type': "application/json",
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        if (!response.ok) {
+            // TODO display banner (bad request / error)
+        }
+        return response.json();
+    }).then(data => {
+        // TODO need to update the UI with the renamed file
+        console.log("Response: ", data)
+    }).catch(e => {
+        // todo display error
+        console.error("Error received: ", e)
     })
 }
 

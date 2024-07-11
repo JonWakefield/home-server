@@ -50,8 +50,8 @@
             </label>
             </a>
             <a class="header-spacing" href="#">
-              <label class="icon-label" for="">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+              <label id="renameFile" class="icon-label" for="">
+                <svg  xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                   class="bi" viewBox="0 0 16 16">
                   <path
                     d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
@@ -121,6 +121,35 @@
               </div>
               <div class="d-flex flex-wrap flex-md-nowrap align-items-center pt-4 pb-2 mb-3 border-bottom">
             </div> -->
+
+
+          
+            <!-- Rename file modal -->
+            <div id="renameModal" class="modal modal-sheet p-4 py-md-5" tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content rounded-4 shadow">
+                  <div class="modal-header p-5 pb-1 border-bottom-0">
+                    <h1 class="fw-bold mb-0 fs-5">Rename File: </h1>
+                    <span type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></span>
+                  </div>
+                  <div class="modal-body p-5 pt-0">
+                    <form id="renameForm" class="">
+                    <label id="oldFileName" class="pb-3 basic-label"></label>
+                      <div class="form-floating mb-3">
+                        <input type="text" class="form-control rounded-3" id="renameInput" placeholder="New File Name">
+                        <label for="renameInput">New File name</label>
+                      </div>
+                      <div class="form-floating mb-3">
+                      </div>
+                      <button class="w-100 mb-2 btn btn-lg rounded-3 btn-primary" id="renameBut" type="submit">Submit</button>
+                      <label id="renameError" class="err-label"></label>
+                      <hr class="my-1">
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </main>
         </div>
       </div>

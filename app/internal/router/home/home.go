@@ -10,9 +10,10 @@ import (
 
 type DirContents map[string][]string
 
-type DownloadFilePayload struct {
-	FileName string `json:"fileName"`
-	Path     string `json:"path"`
+type Payload struct {
+	NewFileName string `json:"newFileName"`
+	FileName    string `json:"fileName"`
+	Path        string `json:"path"`
 }
 
 func GetFileNames(path string) (DirContents, error) {
@@ -30,8 +31,26 @@ func GetFileNames(path string) (DirContents, error) {
 	return files, err
 }
 
+// TODO change this to a method for payload
 func DownloadFile(c *gin.Context, name, path string) {
 	// add file to body stream for user downloading
 	fullPath := path + "/" + name
 	c.File(fullPath)
+}
+
+func (load *Payload) RenameFile() error {
+
+	oldPath := load.Path + "/" + load.FileName
+
+	dir := filepath.Dir(oldPath)
+
+	newPath := filepath.Join(dir, load.NewFileName)
+
+	// rename the file
+	err := os.Rename(oldPath, newPath)
+	if err != nil {
+		return err
+	}
+	return nil
+
 }

@@ -284,3 +284,11 @@ main {
   transition: 0.2s ease-in;
   cursor: pointer;
 }
+
+.basic-label {
+  padding-left: 3px;
+  padding-top: 2.5px;
+  color: #333;
+  font-size: 14.5px;
+  font-style: italic; 
+}

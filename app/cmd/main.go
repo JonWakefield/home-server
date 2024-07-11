@@ -236,7 +236,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			return
 		}
 
-		var payload home.DownloadFilePayload
+		var payload home.Payload
 
 		if err := c.ShouldBindJSON(&payload); err != nil {
 			// did not successfully receive payload from user
@@ -247,6 +247,37 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		}
 		home.DownloadFile(c, payload.FileName, payload.Path)
 		fmt.Println("File sent back...")
+	})
+
+	r.POST("/api/renamefile", func(c *gin.Context) {
+		// verify user token
+		_, valid := auth.VerifyToken(c, db)
+		if !valid {
+			return
+		}
+		var payload home.Payload
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			// did not successfully receive payload from user
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "No payload uploaded",
+			})
+			return
+		}
+
+		fmt.Println("New name: ", payload.NewFileName)
+		fmt.Println("Old name: ", payload.FileName)
+
+		err := payload.RenameFile()
+		if err != nil {
+			log.Printf("Failed to Rename file. Error: %v ", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed to rename file",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Successfully renamed file",
+		})
 	})
 
 	return r
