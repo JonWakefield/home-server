@@ -38,6 +38,7 @@ function loadContent() {
     let renameFileModal = document.getElementById("renameModal");
     let renameForm = document.getElementById("renameForm");
     let renameInput = document.getElementById("renameInput");
+    let renameErr = document.getElementById("renameError");
     let oldNameLabel = document.getElementById("oldFileName");
     let closeRenameModal = document.getElementsByClassName("btn-close")[0];
 
@@ -52,24 +53,103 @@ function loadContent() {
     }
     closeRenameModal.onclick = function() {
         renameFileModal.style.display = "none";
+        renameErr.textContent = ""
+        renameErr.style.display = "none";
     }
 
     window.onclick = function(event) {
         if (event.target == renameFileModal) {
         renameFileModal.style.display = "none";
+        renameErr.textContent = ""
+        renameErr.style.display = "none";
         }
     }
 
+    // can probably be combined with the validatename function from index.js
+    function validName(name) {
+        // check if the user entered file name is valid
+        const invalidChars = /[\\/:*?"<>|\s]/;
+        if (!name) {
+            return false;
+        }
+        // Check for invalid characters
+        if (invalidChars.test(name)) {
+            return false;
+        }
+        // Check for length (adjust as necessary for your requirements)
+        if (name.length > 50) {
+            return false;
+        }
+        
+        return true;
+    }
+
     renameForm.addEventListener('submit', (event) => {
+        event.preventDefault(); //removing preventDefault causes the page to reload
         let oldName = oldNameLabel.textContent;
         let newName = renameInput.value; 
-        if (!newName) {
-            // TODO: display error label
-            // TODO actually need to check the new name of the file is valid (no spaces)
+
+        if (!validName(newName)) {
+            renameErr.textContent = "Invalid File Name"
+            renameErr.style.display = "block";
             return
         }
         RenameFile(event, oldName, newName)
     })
+
+    function getExtension(file) {
+        // gets the extension for a given file
+        let ext = ""
+        for (let i = file.length - 1; i >= 0; i--) {
+            if (file[i] === ".") {
+                break
+            }
+            ext = ext + file[i]
+        }
+        return ext.split('').reverse().join('');
+    }
+    function appendExt(name, ext) {
+        return name + "." + ext
+    }
+    function RenameFile(event, oldName, newName) {
+        event.preventDefault();
+        // send request to api, renaming selected file
+    
+        let extension = getExtension(oldName)
+        newName = appendExt(newName, extension)
+    
+        let payload = {
+            newFileName: newName,
+            fileName: oldName,
+            path: userInfo.directory,
+        }
+        fetch('/api/renamefile', {
+            method: "POST",
+            headers: {
+                'Content-Type': "application/json",
+            },
+            body: JSON.stringify(payload)
+        }).then(response => {
+            if (!response.ok) {
+                console.log("Not okay!!")
+                renameErr.textContent = "HTTP Error: " + response.statusText
+                renameErr.style.display = "block";
+                return
+            }
+            return response.json();
+        }).then(data => {
+            if (!data) {
+                return
+            }
+            // TODO need to update the UI with the renamed file
+            console.log("Response: ", data)
+            renameFileModal.style.display = "none";
+            renameInput.value = "";
+        }).catch(e => {
+            // todo display error
+            console.error("Error received: ", e)
+        })
+    }
 
 
 
@@ -492,37 +572,7 @@ function downloadFile() {
     })
 }
 
-function RenameFile(event, oldName, newName) {
-    event.preventDefault();
-    // send request to api, renaming selected file
-    console.log("Renaming file...")
-    let payload = {
-        newFileName: newName,
-        fileName: oldName,
-        path: userInfo.directory,
-    }
 
-    console.log(payload)
-
-    fetch('/api/renamefile', {
-        method: "POST",
-        headers: {
-            'Content-Type': "application/json",
-        },
-        body: JSON.stringify(payload)
-    }).then(response => {
-        if (!response.ok) {
-            // TODO display banner (bad request / error)
-        }
-        return response.json();
-    }).then(data => {
-        // TODO need to update the UI with the renamed file
-        console.log("Response: ", data)
-    }).catch(e => {
-        // todo display error
-        console.error("Error received: ", e)
-    })
-}
 
 function goBack() {
     console.log("called")

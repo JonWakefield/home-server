@@ -263,10 +263,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			})
 			return
 		}
-
-		fmt.Println("New name: ", payload.NewFileName)
-		fmt.Println("Old name: ", payload.FileName)
-
 		err := payload.RenameFile()
 		if err != nil {
 			log.Printf("Failed to Rename file. Error: %v ", err)
@@ -279,7 +275,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			"message": "Successfully renamed file",
 		})
 	})
-
 	return r
 }
 
