@@ -3,12 +3,16 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"math"
 	"os"
 	"path/filepath"
 	"time"
 )
 
-const DirPermissions = 0755
+const (
+	DirPermissions   = 0755
+	storagePrecision = 2 // num of decimal points to use when calculating amount of storage
+)
 
 func GetCurTime() string {
 	currentTime := time.Now()
@@ -47,6 +51,13 @@ func GetUserStorageAmt(path string) (int64, error) {
 	return totalSize, err
 }
 
+func Round(val float64, precision int) float64 {
+	// rounds val to precision num of decimal points
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
+}
+
 func UnitConverter(size int64, unit int64) float64 {
-	return float64(size) / float64(unit)
+	result := float64(size) / float64(unit)
+	return Round(result, storagePrecision)
 }

@@ -2,7 +2,6 @@ package auth
 
 import (
 	"database/sql"
-	"fmt"
 	database "home-server/internal/db"
 	"log"
 	"net/http"
@@ -14,7 +13,6 @@ func VerifyToken(c *gin.Context, db *sql.DB) (int, bool) {
 	// verify user has a login-token and its still valid
 
 	token, err := c.Cookie("login-token") //returns an error if no token is found
-	fmt.Println("Token: ", token)
 	if err != nil {
 		log.Printf("Could not find a valid token! %v", err)
 		c.Redirect(http.StatusTemporaryRedirect, "")

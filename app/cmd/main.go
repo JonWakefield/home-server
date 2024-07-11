@@ -128,7 +128,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 	r.GET("/api/getUserInfo", func(c *gin.Context) {
 
 		userId, valid := auth.VerifyToken(c, db)
-		fmt.Println("User Id from token: ", userId)
 		if !valid {
 			return
 		}
@@ -216,7 +215,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 		// convert to kb (use kb as base unit)
 		sizeConv := utils.UnitConverter(size, BASE_SIZE)
-
 		if err != nil {
 			log.Printf("Encountered error calculating users storage: %v", err)
 			// TODO Handle error (file was saved successfully so ...)

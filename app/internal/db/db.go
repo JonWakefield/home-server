@@ -54,7 +54,6 @@ func GetUserID(db *sql.DB, token string) (int, error) {
 		fmt.Printf("Error validating user: %v", err)
 		return 0, err
 	}
-	fmt.Println("Count: ", userId)
 	return userId, nil
 }
 

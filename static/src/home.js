@@ -2,7 +2,7 @@ let userInfo;
 let selectedFile = null;
 
 // TODO FIND CORRECT NUMBER
-const FILES_PER_ROW = 8 
+const FILES_PER_ROW = 8 // may change on screen size? 
 
 const filePanelClasses = {
     rowDiv: "d-flex flex-wrap flex-md-nowrap align-items-center pt-4 pb-2 mb-3 border-bottom",
@@ -120,8 +120,8 @@ function loadContent() {
         // apply text
         smallLabel.textContent = "Storage Used:";
 
-        // TODO Need function to calc to display Mb or Kb or Gb
-        smallAmt.textContent = `${userInfo.total_storage} Kb`; 
+        const [units, size] = getStorageUnits(userInfo.total_storage)
+        smallAmt.textContent = `${size} ${units}`; 
 
         // create storage svg
         svg = createFloppySVG();
@@ -438,3 +438,18 @@ function goBack() {
     window.history.back();
 }
 
+function getStorageUnits(size) {
+    // determine where we should display kb, mb or gb for on UI
+    // default units retrieved from backend are kb
+    // this function assumes two decimal points of precision
+    size = size.toString()
+    let len = size.length
+    if (len <= 6) {
+      return ["KB", size];
+    }  else if (len > 6 && len <= 9) {
+      size = size / 1000
+      return ["MB", size]
+    }
+    size = size / (1000 * 1000)
+    return ["GB", size]
+}

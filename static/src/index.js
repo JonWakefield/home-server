@@ -204,7 +204,13 @@ function loadSidebar() {
           },
           body: JSON.stringify(user)
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          createAccError.textContent = "HTTP Error: " + response.status
+          createAccError.style.display = "block";
+        }
+        return response.json();
+      })
       .then(data => {
           console.log('Success:', data);
             // IF response comes back SUCCESS (200), reload page
@@ -212,9 +218,7 @@ function loadSidebar() {
             createAccModal.style.display = "none";
       })
       .catch((error) => {
-          console.error('Error:', error);
-          // Handle errors here
-          // TODO Display error to user:
+        console.error("Error: ", error)
 
       });
   })
@@ -253,7 +257,13 @@ function loadSidebar() {
         'Content-Type': "application/json"
       },
       body: JSON.stringify(userCreds)
-    }).then(response => response.json())
+    }).then(response => {
+      if (!response.ok) {
+        signInError.textContent = "HTTP Error: " + response.status
+        signInError.style.display = "block";
+      }
+      return response.json();
+    })
     .then(data => {
       const message = data.message
       const login = data.login
@@ -264,13 +274,11 @@ function loadSidebar() {
         signInPassword.value = "";
         signInError.style.display = "none";
       } else {
-        signInError.textContent = "Invalid Password"
+        signInError.textContent = message
         signInError.style.display = "block";
       }
     }).catch((error) => {
-      console.log("Error: ", error)
-      signInError.textContent = "Error: " + error
-      signInError.style.display = "block";
+      console.error("Error: ", error)
     });
   })
   function fetchUsers() {
