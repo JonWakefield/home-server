@@ -46,17 +46,6 @@ func createTokensTable(db *sql.DB) {
 	}
 }
 
-func GetUserID(db *sql.DB, token string) (int, error) {
-	var userId int
-	query := `SELECT user_id FROM Tokens WHERE token = ?`
-	err := db.QueryRow(query, token).Scan(&userId)
-	if err != nil {
-		fmt.Printf("Error validating user: %v", err)
-		return 0, err
-	}
-	return userId, nil
-}
-
 func InitDB() *sql.DB {
 	if _, err := os.Stat(dbName); os.IsNotExist(err) {
 		file, err := os.Create(dbName)
@@ -75,4 +64,28 @@ func InitDB() *sql.DB {
 	createTokensTable(db)
 	fmt.Println("Initialized Database successfully...")
 	return db
+}
+
+func GetUserID(db *sql.DB, token string) (int, error) {
+	var userId int
+	query := `SELECT user_id FROM Tokens WHERE token = ?`
+	err := db.QueryRow(query, token).Scan(&userId)
+	if err != nil {
+		fmt.Printf("Error validating user: %v", err)
+		return 0, err
+	}
+	return userId, nil
+}
+
+func DelUserTokens(db *sql.DB, id int) {
+	// delete all user tokens from `tokens` table
+	// called on user account deletion
+	query := `DELETE FROM Tokens WHERE user_id = ?`
+
+	_, err := db.Exec(query, id)
+
+	if err != nil {
+		log.Printf("Error deleting users Tokens: %v ", err)
+	}
+	log.Printf("Successfully deleted users tokens...")
 }

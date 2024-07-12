@@ -379,6 +379,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			"message": "Successfully Deleted User",
 		})
 		// TODO delete all tokens in tokens db for user
+		go database.DelUserTokens(db, userId)
 
 	})
 
