@@ -20,7 +20,9 @@ func VerifyToken(c *gin.Context, db *sql.DB) (int, bool) {
 	}
 
 	// verify the login token
+	// TODO need to check if the token is expired
 	userId, err := database.GetUserID(db, token)
+
 	if err != nil {
 		// this probabily means the token is expired
 		log.Printf("Could not find a user for token: %v", err)

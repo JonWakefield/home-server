@@ -61,3 +61,12 @@ func UnitConverter(size int64, unit int64) float64 {
 	result := float64(size) / float64(unit)
 	return Round(result, storagePrecision)
 }
+
+func DelDir(path string) error {
+	// delete users root directory
+	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+	return nil
+}

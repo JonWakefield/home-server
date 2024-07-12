@@ -17,6 +17,7 @@ const fileIdxNames = {
 let numFiles = 0;
 let rowDiv = document.createElement('div');
 let main = document.getElementById('main');
+let delAcc = false;
 
 
 function addFile() {
@@ -47,6 +48,9 @@ function loadContent() {
     });
 
 
+    let deleteAcc;
+
+
     // --- download file ---
     let download = document.getElementById("downloadFile");
 
@@ -67,6 +71,7 @@ function loadContent() {
     let delError = document.getElementById('delError');
     let closeDeleteModal = document.getElementsByClassName("btn-close")[1];
     let delFileLabel = document.getElementById('delFileName');
+    let delTitle = document.getElementById('delTitle');
 
     // --- Add Folder interactions ---
     let addFolder = document.getElementById("addFolder");
@@ -97,6 +102,8 @@ function loadContent() {
             banner.classList.add("show");
             return
         }
+        delAcc = false;
+        delTitle.textContent = "Delete File?"
         delFileLabel.textContent = selectedFile.querySelector('label').textContent
         deleteFileModal.style.display = "block";
     }
@@ -187,8 +194,33 @@ function loadContent() {
 
     })
 
-    deleteFileForm.addEventListener('submit', (event) => {
-        event.preventDefault();
+    function delAccount() {
+        console.log("Deleting account...")
+
+        fetch('/api/deleteAccount', {
+            method: "POST",
+            headers: {
+                'Content-Type': "application/json",
+            },
+            body: JSON.stringify(userInfo)
+        }).then(response => {
+            if (!response.ok) {
+                delFileLabel.textContent = "HTTP Error: " + response.statusText;
+                delFileLabel.style.display = "block";
+                return;
+            }
+            return response.json()
+        }).then(data => {
+            window.location.href = "/";
+        }).catch(e => {
+            notiMessage.textContent = "Error Received: " + e
+            banner.classList.add("show");
+        })
+
+    }
+
+    function deleteFile() {
+        console.log("deleting file...")
         let fName = delFileLabel.textContent;
         let payload = {
             fileName: fName,
@@ -218,6 +250,20 @@ function loadContent() {
             notiMessage.textContent = "Error Received: " + e
             banner.classList.add("show");
         })
+    }
+
+    deleteFileForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        // this submit could be either 
+        // 1 -> delete account
+        // 2 -> delete file / folder
+        if (delAcc) {
+            delAccount()
+            return
+        } 
+        deleteFile()
+        return
     })
 
 
@@ -338,6 +384,7 @@ function loadContent() {
         
         // create elements
         const panel = document.createElement('a');
+        deleteAcc = panel
         const div= document.createElement('div');
         const small = document.createElement('small');
 
@@ -477,6 +524,17 @@ function loadContent() {
         userPanel.appendChild(deleteAccPanel);
     }
 
+    function setupDelAcc() {
+
+        deleteAcc.onclick = function() {
+            delTitle.textContent = "Delete Account?"
+            delFileLabel.textContent = "This will delete all files and folders"
+            deleteFileModal.style.display = "block";
+            delAcc = true;
+        }
+
+    }
+
 
     function fetchUserInfo() {
         fetch('/api/getUserInfo', {
@@ -486,13 +544,15 @@ function loadContent() {
             }
         }).then(response => {
             if(!response.ok) {
-                throw new Error("Failed to retrieve content ", response.statusText)
+                notiMessage.textContent = "Failed to retrieve content " + response.statusText
+                banner.classList.add("show");
             }
             return response.json()
         }).then(data => {
             userInfo = data.user_info
             console.log("User Info: ", userInfo)
             displayUserInfo();
+            setupDelAcc();
         }).catch(error => {
             console.log("Error: ", error)
         })

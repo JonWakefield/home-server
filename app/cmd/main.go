@@ -335,6 +335,50 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			"message": "Successfully Added Directory",
 			"created": true,
 		})
+	})
+
+	r.POST("/api/deleteAccount", func(c *gin.Context) {
+		// verify user token
+		userId, valid := auth.VerifyToken(c, db)
+		if !valid {
+			return
+		}
+		var user models.User
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "No payload found.",
+			})
+			return
+		}
+		// double check user id is valid
+		if user.ID != userId {
+			fmt.Println("Not the same!")
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Can not delete user",
+			})
+		}
+		// get root dir (i think this will be important when i add in file navigation)
+		rootDir, err := user.GetRootDir(db)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Can not delete user",
+			})
+		}
+		err = user.DeleteAccount(db)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Can not delete user",
+			})
+		}
+		err = utils.DelDir(rootDir)
+		if err != nil {
+			log.Printf("Failed to delete users diretory. %v ", err)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Successfully Deleted User",
+		})
+		// TODO delete all tokens in tokens db for user
 
 	})
 

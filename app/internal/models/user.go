@@ -202,3 +202,27 @@ func (user *User) UpdateStorageAmt(db *sql.DB) {
 		log.Printf("Failed to update usere storage amount: %v ", err)
 	}
 }
+
+func (user *User) DeleteAccount(db *sql.DB) error {
+
+	query := `DELETE FROM Users WHERE id = ?`
+
+	_, err := db.Exec(query, user.ID)
+	if err != nil {
+		log.Printf("Failed to delete user: %v", err)
+		return err
+	}
+	return nil
+
+}
+
+func (user *User) GetRootDir(db *sql.DB) (string, error) {
+	// get user root directory
+	var dir string
+	query := `SELECT directory FROM Users WHERE id = ?`
+	err := db.QueryRow(query, user.ID).Scan(&dir)
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
+}
