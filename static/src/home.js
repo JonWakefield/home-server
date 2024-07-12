@@ -25,6 +25,10 @@ function addFile() {
 
 function loadContent() {
 
+    
+
+
+
     const userPanelClasses = {
         a: "list-group-item list-group-item-action py-3 lh-sm",
         div: "d-flex w-100 align-items-center",
@@ -32,6 +36,20 @@ function loadContent() {
         smallStorage: "lp lblue",
         smallDelete: "lp lred",
     }
+
+    // --- noti. banner ----
+    const banner = document.getElementById("notification-banner");
+    const closeNotiButton = document.getElementById("close-banner");
+    const notiMessage = document.getElementById("notification-message");
+
+    closeNotiButton.addEventListener("click", function() {
+        banner.classList.remove("show");
+    });
+
+
+    // --- download file ---
+    let download = document.getElementById("downloadFile");
+
 
     // --- Rename file interactions ---
     let renameFile = document.getElementById("renameFile");
@@ -58,6 +76,10 @@ function loadContent() {
     let closeAddModal = document.getElementsByClassName('btn-close')[2];
     let addFolderInput = document.getElementById("addFolderInput")
 
+    download.addEventListener('click', () => {
+        downloadFile()
+    })
+
 
     addFolder.onclick = function() {
         addFolderModal.style.display = "block";
@@ -71,7 +93,8 @@ function loadContent() {
 
     delFile.onclick = function() {
         if (!selectedFile) {
-            // TODO display banner saying to select a file
+            notiMessage.textContent = "Please select a file"
+            banner.classList.add("show");
             return
         }
         delFileLabel.textContent = selectedFile.querySelector('label').textContent
@@ -86,7 +109,8 @@ function loadContent() {
 
     renameFile.onclick = function() {
         if (!selectedFile) {
-            // TODO display banner saying to select a file
+            notiMessage.textContent = "Please select a file"
+            banner.classList.add("show");
             return
         }
         oldNameLabel.textContent = selectedFile.querySelector('label').textContent
@@ -148,15 +172,17 @@ function loadContent() {
                 addFolderErr.style.display = "block";
                 return
             } 
-            // TODO add a banner saying file created successfully
-            // add folder to UI
-            console.log("Response: ", data)
+            notiMessage.textContent = "Folder Created Successfully"
+            banner.classList.add("show");
+
+            // TODO add folder to UI
             addFolderModal.style.display = "none";
             addFolderInput.value = "";
             addFolderErr.style.display = "none";
         }).catch(e => {
-            // todo display error
             console.error("Error received: ", e)
+            notiMessage.textContent = "Error Received: " + e
+            banner.classList.add("show");
         })
 
     })
@@ -183,11 +209,14 @@ function loadContent() {
             }
             return response.json()
         }).then(data => {
+            notiMessage.textContent = "File Deleted Successfully"
+            banner.classList.add("show");
             deleteFileModal.style.display = "none";
             delError.style.display = "none";
 
         }).catch(e => {
-            console.error("Error received: ", e)
+            notiMessage.textContent = "Error Received: " + e
+            banner.classList.add("show");
         })
     })
 
@@ -274,8 +303,9 @@ function loadContent() {
             renameFileModal.style.display = "none";
             renameInput.value = "";
         }).catch(e => {
-            // todo display error
             console.error("Error received: ", e)
+            notiMessage.textContent = "Error Received: " + e
+            banner.classList.add("show");
         })
     }
 
@@ -508,19 +538,74 @@ function loadContent() {
                 body: formData,
             }).then(response => {
                 if (!response.ok) {
-                    // TODO: display banner message indicating failed upload
+                    notiMessage.textContent = "Error Received: " + statusText
+                    banner.classList.add("show");
                 }
                 return response.json()
             }).then(data => {
                 console.log('Success: ', data);
+                notiMessage.textContent = "File uploaded successfully"
+                banner.classList.add("show");
                 // TODO need to add file to UI
+
                 // fetchDirContent();
             }).catch((error) => {
-                // TODO: Display banner message indicating failed upload
                 console.error("Error: ", error);
+                notiMessage.textContent = "Error Received: " + error
+                banner.classList.add("show");
             });
         } 
     })
+
+    // download file button
+    function downloadFile() {
+        console.log("Downloading...")
+        file = selectedFile;
+        if (!file) {
+            console.log("No file!")
+            notiMessage.textContent = "Please select a file"
+            banner.classList.add("show");
+            return
+        }
+
+        let fileName = file.querySelector('label').textContent
+        let payload = {
+            fileName: fileName,
+            path: userInfo.directory,
+        }
+
+        fetch('/api/downloadFile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': "application/json"
+            },
+            body: JSON.stringify(payload)
+        }).then(response => {
+            if (!response.ok) {
+                notiMessage.textContent = "HTTP Error: " + response.statusText
+                banner.classList.add("show");
+            }
+            return response.blob(); 
+        }).then(file => {
+            const urlObject = window.URL.createObjectURL(file);
+            const link = document.createElement('a');
+            link.href = urlObject;
+
+            // Extract the file name from the URL
+            const filename = fileName
+            link.download = filename;
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // release the object URL
+            window.URL.revokeObjectURL(urlObject);
+
+        }).catch(error => {
+            console.log("Error received: ", error)
+        })
+    }
 
     fetchUserInfo();
     fetchDirContent();
@@ -655,54 +740,6 @@ function deleteFile() {
     console.log("Deleting File...")
 }
 
-// download file button
-function downloadFile() {
-    console.log("Downloading...")
-    file = selectedFile;
-    if (!file) {
-        // TODO add some type of alert
-        console.log("could not find a file...")
-        return
-    }
-
-    let fileName = file.querySelector('label').textContent
-    let payload = {
-        fileName: fileName,
-        path: userInfo.directory,
-    }
-
-    fetch('/api/downloadFile', {
-        method: 'POST',
-        headers: {
-            'Content-Type': "application/json"
-        },
-        body: JSON.stringify(payload)
-    }).then(response => {
-        if (!response.ok) {
-            // TODO add error to banner
-            throw new Error("Failed to retrieve content ", response.statusText);
-        }
-        return response.blob(); 
-    }).then(file => {
-        const urlObject = window.URL.createObjectURL(file);
-        const link = document.createElement('a');
-        link.href = urlObject;
-
-        // Extract the file name from the URL
-        const filename = fileName
-        link.download = filename;
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // release the object URL
-        window.URL.revokeObjectURL(urlObject);
-
-    }).catch(error => {
-        console.log("Error received: ", error)
-    })
-}
 
 
 
