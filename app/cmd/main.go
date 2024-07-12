@@ -302,6 +302,42 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		})
 	})
 
+	r.POST("/api/addFolder", func(c *gin.Context) {
+		// verify user token
+		_, valid := auth.VerifyToken(c, db)
+		if !valid {
+			return
+		}
+		var payload home.Payload
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "No payload found.",
+			})
+			return
+		}
+		exists, err := payload.AddDirectory()
+		if exists {
+			c.JSON(http.StatusOK, gin.H{
+				"message": "Folder already Exists",
+				"created": false,
+			})
+			return
+		}
+		if err != nil {
+			log.Printf("Failed to Add Directory. Error: %v ", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "Failed to Add Directory",
+				"created": false,
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Successfully Added Directory",
+			"created": true,
+		})
+
+	})
+
 	return r
 }
 

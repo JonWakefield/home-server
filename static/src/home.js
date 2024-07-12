@@ -50,6 +50,25 @@ function loadContent() {
     let closeDeleteModal = document.getElementsByClassName("btn-close")[1];
     let delFileLabel = document.getElementById('delFileName');
 
+    // --- Add Folder interactions ---
+    let addFolder = document.getElementById("addFolder");
+    let addFolderModal = document.getElementById("addFolderModal");
+    let addFolderForm = document.getElementById("addFolderForm");
+    let addFolderErr = document.getElementById("addFolderErr");
+    let closeAddModal = document.getElementsByClassName('btn-close')[2];
+    let addFolderInput = document.getElementById("addFolderInput")
+
+
+    addFolder.onclick = function() {
+        addFolderModal.style.display = "block";
+    }
+
+    closeAddModal.onclick = function() {
+        addFolderModal.style.display = "none";
+        addFolderErr.textContent = "";
+        addFolderErr.style.display = "none";
+    }
+
     delFile.onclick = function() {
         if (!selectedFile) {
             // TODO display banner saying to select a file
@@ -89,8 +108,58 @@ function loadContent() {
             deleteFileModal.style.display = "none";
             delError.textContent = "";
             delError.style.display = "none";
+        } else if (event.target == addFolderModal) {
+            addFolderModal.style.display = "none";
+            addFolderErr.textContent = "";
+            addFolderErr.style.display = "none";
         }
     }
+
+    addFolderForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        let folderName = addFolderInput.value;
+        if (!validName(folderName)) {
+            addFolderErr.textContent = "Invalid Folder Name"
+            addFolderErr.style.display = "block";
+            return;
+        }
+        let payload = {
+            newFileName: folderName,
+            path: userInfo.directory,
+        }
+        fetch('/api/addFolder', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload)
+        }).then(response => {
+            if (!response.ok) {
+                addFolderErr.textContent = "HTTP Error: " + response.statusText
+                addFolderErr.style.display = "block";
+                return
+            }
+            return response.json();
+        }).then(data => {
+            let created = data.created;
+            if (!created) {
+                addFolderErr.textContent = "Folder already Exists"
+                addFolderErr.style.display = "block";
+                return
+            } 
+            // TODO add a banner saying file created successfully
+            // add folder to UI
+            console.log("Response: ", data)
+            addFolderModal.style.display = "none";
+            addFolderInput.value = "";
+            addFolderErr.style.display = "none";
+        }).catch(e => {
+            // todo display error
+            console.error("Error received: ", e)
+        })
+
+    })
 
     deleteFileForm.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -108,11 +177,14 @@ function loadContent() {
             body: JSON.stringify(payload)
         }).then(response => {
             if (!response.ok) {
-                // TODO add error message
+                delFileLabel.textContent = "HTTP Error: " + response.statusText;
+                delFileLabel.style.display = "block";
+                return;
             }
             return response.json()
         }).then(data => {
-            console.log("Response: ", data)
+            deleteFileModal.style.display = "none";
+            delError.style.display = "none";
 
         }).catch(e => {
             console.error("Error received: ", e)
@@ -163,9 +235,11 @@ function loadContent() {
         }
         return ext.split('').reverse().join('');
     }
+
     function appendExt(name, ext) {
         return name + "." + ext
     }
+
     function RenameFile(event, oldName, newName) {
         event.preventDefault();
         // send request to api, renaming selected file
@@ -186,7 +260,6 @@ function loadContent() {
             body: JSON.stringify(payload)
         }).then(response => {
             if (!response.ok) {
-                console.log("Not okay!!")
                 renameErr.textContent = "HTTP Error: " + response.statusText
                 renameErr.style.display = "block";
                 return

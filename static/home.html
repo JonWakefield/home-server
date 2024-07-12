@@ -61,6 +61,14 @@
               </label>
             </a>
             <a class="header-spacing" href="#">
+              <label id="addFolder" class="icon-label" for="">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-folder-plus" viewBox="0 0 16 16">
+                  <path d="m.5 3 .04.87a2 2 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2m5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19q-.362.002-.683.12L1.5 2.98a1 1 0 0 1 1-.98z"/>
+                  <path d="M13.5 9a.5.5 0 0 1 .5.5V11h1.5a.5.5 0 1 1 0 1H14v1.5a.5.5 0 1 1-1 0V12h-1.5a.5.5 0 0 1 0-1H13V9.5a.5.5 0 0 1 .5-.5"/>
+                </svg>Add Folder
+              </label>
+            </a>
+            <a class="header-spacing" href="#">
               <label id="delFile" class="icon-label" for="">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi"
                 viewBox="0 0 16 16">
@@ -169,6 +177,33 @@
                 </div>
               </div>
             </div>
+
+            <!-- Add folder modal -->
+            <div id="addFolderModal" class="modal modal-sheet p-4 py-md-5" tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content rounded-4 shadow small-modal">
+                  <div class="modal-header p-5 pb-1 border-bottom-0 center">
+                    <h1 class="fw-bold mb-0 fs-5 ">Folder Name:</h1>
+                    <span type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></span>
+                  </div>
+                  <div class="modal-body p-5 pt-0">
+                    <form id="addFolderForm" class="center">
+                      <div class="form-floating mb-3">
+                      </div>
+                      <div class="form-floating mb-3">
+                        <input type="text" class="form-control rounded-3" id="addFolderInput" placeholder="Folder">
+                        <label for="addFolderInput">Folder</label>
+                      </div>
+                      <button class="w-80 mb-2 btn btn-md rounded-3 btn-primary" id="addFolderBut" type="submit">Confirm</button>
+                      <label id="addFolderErr" class="err-label"></label>
+                      <hr class="my-1">
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
 
           </main>
         </div>

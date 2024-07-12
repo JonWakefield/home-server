@@ -253,7 +253,7 @@ main {
   background-color: #ccc;
   border-radius: 5px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: 0.1s;
 }
 
 .selected-file svg {
