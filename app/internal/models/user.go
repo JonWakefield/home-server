@@ -169,11 +169,11 @@ func (user *User) SignIn(db *sql.DB) (bool, error) {
 	return true, nil
 }
 
-func (user *User) StoreToken(db *sql.DB, token string) error {
+func (user *User) StoreToken(db *sql.DB, token, exp string) error {
 	// store login-token in sql
-	query := `INSERT INTO Tokens (user_id, token) VALUES (?, ?)`
+	query := `INSERT INTO Tokens (user_id, token, expiration) VALUES (?, ?, ?)`
 
-	_, err := db.Exec(query, user.ID, token)
+	_, err := db.Exec(query, user.ID, token, exp)
 	if err != nil {
 		log.Printf("Failed to store token in Users Table: %v", err)
 		return err

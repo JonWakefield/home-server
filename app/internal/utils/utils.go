@@ -19,6 +19,12 @@ func GetCurTime() string {
 	return currentTime.Format("2006-01-02 15:04:05")
 }
 
+func CalcExpirationTime(timeLen int) string {
+	var len time.Duration = time.Duration(timeLen)
+	expTime := time.Now().Add(len * time.Minute).Format("2006-01-02 15:04:05")
+	return expTime
+}
+
 func CreateDir(path string) error {
 	err := os.Mkdir(path, DirPermissions)
 	if err != nil {

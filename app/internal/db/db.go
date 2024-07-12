@@ -36,7 +36,7 @@ func createTokensTable(db *sql.DB) {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER NOT NULL,
 		token TEXT NOT NULL UNIQUE,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		expiration TEXT NOT NULL,
 		FOREIGN KEY(user_id) REFERENCES Users(id) ON DELETE CASCADE	
 	)
 	`
@@ -68,7 +68,7 @@ func InitDB() *sql.DB {
 
 func GetUserID(db *sql.DB, token string) (int, error) {
 	var userId int
-	query := `SELECT user_id FROM Tokens WHERE token = ?`
+	query := `SELECT user_id FROM Tokens WHERE expiration > datetime('now')`
 	err := db.QueryRow(query, token).Scan(&userId)
 	if err != nil {
 		fmt.Printf("Error validating user: %v", err)

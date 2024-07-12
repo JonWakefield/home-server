@@ -102,7 +102,9 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			return
 		}
 		// store token in db
-		err = user.StoreToken(db, token)
+		expTime := utils.CalcExpirationTime(TOKEN_LAST_LENGTH)
+
+		err = user.StoreToken(db, token, expTime)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Failed to store user token. Login Failed",
