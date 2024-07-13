@@ -337,3 +337,16 @@ main {
   right: 10px;
   transform: translateY(-50%);
 }
+
+
+.preview-container {
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    padding: 20px;
+    display: none;
+}
+
+.preview-image, .preview-text, .preview-pdf {
+    width: 100%;
+    height: auto;
+}

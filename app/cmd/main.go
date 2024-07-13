@@ -385,6 +385,26 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 	})
 
+	r.POST("/api/previewFile", func(c *gin.Context) {
+		// verify user token
+		_, valid := auth.VerifyToken(c, db)
+		if !valid {
+			return
+		}
+		var payload home.Payload
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "No payload found.",
+			})
+			return
+		}
+
+		// TODO change name from `downloadFile` to retrieve file or something
+		home.DownloadFile(c, payload.FileName, payload.Path)
+		fmt.Println("File sent back...")
+
+	})
+
 	return r
 }
 

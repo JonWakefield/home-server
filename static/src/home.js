@@ -1,6 +1,13 @@
 let userInfo;
 let selectedFile = null;
 
+let validExtensions = [
+    ".png",
+    ".pdf",
+    ".jpeg",
+    ".jpg",
+]
+
 // TODO FIND CORRECT NUMBER
 const FILES_PER_ROW = 8 // may change on screen size? 
 
@@ -54,6 +61,10 @@ function loadContent() {
     // --- download file ---
     let download = document.getElementById("downloadFile");
 
+    // --- Preview File ---
+    let preview = document.getElementById("previewFile");
+    let previewContainer = document.getElementById("preview-container");
+
 
     // --- Rename file interactions ---
     let renameFile = document.getElementById("renameFile");
@@ -82,7 +93,11 @@ function loadContent() {
     let addFolderInput = document.getElementById("addFolderInput")
 
     download.addEventListener('click', () => {
-        downloadFile()
+        downloadFile();
+    })
+
+    preview.addEventListener('click', ()=> {
+        previewFile();
     })
 
 
@@ -644,6 +659,7 @@ function loadContent() {
             if (!response.ok) {
                 notiMessage.textContent = "HTTP Error: " + response.statusText
                 banner.classList.add("show");
+                return
             }
             return response.blob(); 
         }).then(file => {
@@ -664,6 +680,83 @@ function loadContent() {
 
         }).catch(error => {
             console.log("Error received: ", error)
+        })
+    }
+
+    function getExtType(extension) {
+        return "pdf";
+    }
+
+    function showImage(image) {
+        // TODO: untested function
+        const img = document.createElement('img');
+        img.className = 'preview-image';
+        img.src = URL.createObjectURL(image);
+        previewContainer.appendChild(img);
+        return
+    }
+
+    function showPdf(pdf) {
+        const iframe = document.createElement('iframe');
+        iframe.className = 'preview-pdf';
+        iframe.src = URL.createObjectURL(pdf)
+        previewContainer.appendChild(iframe);
+    }
+    function showText(text) {
+
+    }
+
+    function previewFile() {
+        // TODO will need to add a way to close out of the preview
+        console.log("previewing")
+        file = selectedFile;
+        if (!file) {
+            notiMessage.textContent = "Select a file to display"
+            banner.classList.add("show");
+            return;
+        }
+        let fileName = file.querySelector('label').textContent;
+
+        let extension = getExtension(fileName);
+        let extType = getExtType(extension);
+        if (!extType) {
+            notiMessage.textContent = "Can not open a preview for files of this type"
+            banner.classList.add("show");
+            return;
+        }
+
+
+        let payload = {
+            fileName: fileName,
+            path: userInfo.directory,
+        }
+
+        fetch("/api/previewFile", {
+            method: "POST",
+            headers: {
+                'Content-Type': "application/json",
+            },
+            body: JSON.stringify(payload)
+        }).then(response => {
+            if(!response.ok) {
+                notiMessage.textContent = "HTTP Error: " + response.statusText
+                banner.classList.add("show");
+                return
+            }
+            return response.blob()
+        }).then(blob => {
+            previewContainer.innerHTML = '';
+            previewContainer.style.display = "block";
+            if (extType === "image") {
+                showImage(blob)
+            } else if (extType === "pdf") {
+                showPdf(blob)
+            } else if (extType === "text") {
+                showText(blob)
+            }
+            
+        }).catch(e => {
+            console.error("Error: ", e)
         })
     }
 
