@@ -1,11 +1,11 @@
 let userInfo;
 let selectedFile = null;
 
-let validExtensions = [
-    ".png",
-    ".pdf",
-    ".jpeg",
-    ".jpg",
+let imgExtensions = [
+    "png",
+    "jpeg",
+    "jpg",
+    "gif",
 ]
 
 // TODO FIND CORRECT NUMBER
@@ -33,10 +33,6 @@ function addFile() {
 
 function loadContent() {
 
-    
-
-
-
     const userPanelClasses = {
         a: "list-group-item list-group-item-action py-3 lh-sm",
         div: "d-flex w-100 align-items-center",
@@ -63,7 +59,10 @@ function loadContent() {
 
     // --- Preview File ---
     let preview = document.getElementById("previewFile");
+    let previewModal = document.getElementById("previewModal");
+    let previewClose = document.getElementsByClassName("btn-close")[3];
     let previewContainer = document.getElementById("preview-container");
+
 
 
     // --- Rename file interactions ---
@@ -99,6 +98,10 @@ function loadContent() {
     preview.addEventListener('click', ()=> {
         previewFile();
     })
+
+    previewClose.onclick = function() {
+        previewModal.style.display = "none";
+    }
 
 
     addFolder.onclick = function() {
@@ -158,6 +161,8 @@ function loadContent() {
             addFolderModal.style.display = "none";
             addFolderErr.textContent = "";
             addFolderErr.style.display = "none";
+        } else if (event.target == previewModal) {
+            previewModal.style.display = "none";
         }
     }
 
@@ -684,11 +689,13 @@ function loadContent() {
     }
 
     function getExtType(extension) {
-        return "pdf";
+        if (imgExtensions.includes(extension)) {
+            return "image"
+        }
+        return "text";
     }
 
     function showImage(image) {
-        // TODO: untested function
         const img = document.createElement('img');
         img.className = 'preview-image';
         img.src = URL.createObjectURL(image);
@@ -696,19 +703,14 @@ function loadContent() {
         return
     }
 
-    function showPdf(pdf) {
+    function showIframe(text) {
         const iframe = document.createElement('iframe');
-        iframe.className = 'preview-pdf';
-        iframe.src = URL.createObjectURL(pdf)
+        iframe.className = 'preview-iframe';
+        iframe.src = URL.createObjectURL(text)
         previewContainer.appendChild(iframe);
-    }
-    function showText(text) {
-
     }
 
     function previewFile() {
-        // TODO will need to add a way to close out of the preview
-        console.log("previewing")
         file = selectedFile;
         if (!file) {
             notiMessage.textContent = "Select a file to display"
@@ -746,15 +748,13 @@ function loadContent() {
             return response.blob()
         }).then(blob => {
             previewContainer.innerHTML = '';
-            previewContainer.style.display = "block";
+            // previewContainer.style.display = "block";
+            previewModal.style.display = "block";
             if (extType === "image") {
                 showImage(blob)
-            } else if (extType === "pdf") {
-                showPdf(blob)
             } else if (extType === "text") {
-                showText(blob)
+                showIframe(blob)
             }
-            
         }).catch(e => {
             console.error("Error: ", e)
         })
