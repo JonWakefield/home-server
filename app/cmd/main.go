@@ -413,5 +413,6 @@ func main() {
 	defer db.Close()
 
 	router := setupRouter(db)
+	router.MaxMultipartMemory = 50 << 20
 	router.Run(":8080")
 }

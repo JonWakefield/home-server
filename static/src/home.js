@@ -618,8 +618,9 @@ function loadContent() {
                 body: formData,
             }).then(response => {
                 if (!response.ok) {
-                    notiMessage.textContent = "Error Received: " + statusText
+                    notiMessage.textContent = "Error Received: " + response.status
                     banner.classList.add("show");
+                    return;s
                 }
                 return response.json()
             }).then(data => {
