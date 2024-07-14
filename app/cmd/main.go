@@ -175,7 +175,8 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		}
 
 		// get the content from the users directory, return file names back to user
-		contents, err := home.GetFileNames(user.Directory)
+		contents, err := user.GetFileNames()
+
 		if err != nil {
 			log.Printf("Error reading in file names: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{

@@ -7,6 +7,10 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -21,6 +25,8 @@ type User struct {
 	CreatedAt    string  `json:"created_at"`
 	TotalStorage float64 `json:"total_storage"`
 }
+
+type DirContents map[string][]string
 
 const BasePath = "/app/users/"
 
@@ -225,4 +231,33 @@ func (user *User) GetRootDir(db *sql.DB) (string, error) {
 		return "", err
 	}
 	return dir, nil
+}
+
+// user/jon
+func getCurDir(dir string) string {
+	res := strings.Split(dir, "/")
+	return res[len(res)-1]
+}
+
+func (user *User) GetFileNames() (DirContents, error) {
+	// given a path, return all the files and folders inside of the path
+	var name string
+	files := make(DirContents)
+
+	curDir := getCurDir(user.Directory)
+
+	err := filepath.WalkDir(user.Directory, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		dir := strconv.FormatBool(d.IsDir())
+		if d.Name() == curDir {
+			name = ".."
+		} else {
+			name = d.Name()
+		}
+		files[name] = []string{dir}
+		return nil
+	})
+	return files, err
 }

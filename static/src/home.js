@@ -208,10 +208,8 @@ function loadContent() {
                 addFolderErr.style.display = "block";
                 return
             } 
-            notiMessage.textContent = "Folder Created Successfully"
-            banner.classList.add("show");
+            addFileToDOM(folderName, "dir");
 
-            // TODO add folder to UI
             addFolderModal.style.display = "none";
             addFolderInput.value = "";
             addFolderErr.style.display = "none";
@@ -249,7 +247,6 @@ function loadContent() {
     }
 
     function deleteFile() {
-        console.log("deleting file...")
         let fName = delFileLabel.textContent;
         let payload = {
             fileName: fName,
@@ -270,11 +267,9 @@ function loadContent() {
             }
             return response.json()
         }).then(data => {
-            notiMessage.textContent = "File Deleted Successfully"
-            banner.classList.add("show");
             deleteFileModal.style.display = "none";
             delError.style.display = "none";
-
+            window.location.reload();
         }).catch(e => {
             notiMessage.textContent = "Error Received: " + e
             banner.classList.add("show");
@@ -639,7 +634,7 @@ function loadContent() {
                 }
                 return response.json()
             }).then(data => {
-                addFileToDOM(formData.get("file"));
+                addFileToDOM(formData.get("file").name, "file"); // todo update for image icon support
             }).catch((error) => {
                 console.error("Error: ", error);
                 notiMessage.textContent = "Error Received: " + error
@@ -865,7 +860,7 @@ function createRowDiv() {
     return rowDiv
 }
 
-function addFileToDOM(file) {
+function addFileToDOM(name, type) {
     // append the uploaded file to the DOM
     let page = pages[curPage];
     let items = numItems[curPage];
@@ -879,9 +874,9 @@ function addFileToDOM(file) {
         curRow = page.pop();
     }
 
-    let fileName = file.name
+    let fileName = name
     // todo: need to check if row is full (make a new row then)
-    fileDiv = createFileComponents(fileName, "file")
+    fileDiv = createFileComponents(fileName, type)
     curRow.appendChild(fileDiv);
 
     // put the row back into the pages
@@ -891,6 +886,7 @@ function addFileToDOM(file) {
     // update number of items
     numItems[curPage]++;
 }
+
 
 function loadFilesDOM(files) {
     // load received files and folderes ono the DOM
@@ -970,12 +966,6 @@ function addFileListeners() {
         })
     })
 }
-
-function deleteFile() {
-    console.log("Deleting File...")
-}
-
-
 
 
 function goBack() {
