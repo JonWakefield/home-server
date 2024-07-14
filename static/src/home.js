@@ -1,6 +1,12 @@
 let userInfo;
 let selectedFile = null;
 
+let rows = [];
+let pages = [[]];
+let numItems = [0]; // numItems[i] is the number of items on page i
+let curPage = 0;
+let curRow = 0;
+
 let imgExtensions = [
     "png",
     "jpeg",
@@ -9,7 +15,7 @@ let imgExtensions = [
 ]
 
 // TODO FIND CORRECT NUMBER
-const FILES_PER_ROW = 8 // may change on screen size? 
+const FILES_PER_ROW = 4 // may change on screen size? 
 
 const filePanelClasses = {
     rowDiv: "d-flex flex-wrap flex-md-nowrap align-items-center pt-4 pb-2 mb-3 border-bottom",
@@ -21,6 +27,8 @@ const fileIdxNames = {
     dir: 0,
 }
 
+// --- main panel ---
+const mainPanel = document.getElementById('main');
 let numFiles = 0;
 let rowDiv = document.createElement('div');
 let main = document.getElementById('main');
@@ -52,6 +60,7 @@ function loadContent() {
 
 
     let deleteAcc;
+
 
 
     // --- download file ---
@@ -328,6 +337,10 @@ function loadContent() {
             }
             ext = ext + file[i]
         }
+        if (ext.length === file.length) {
+            console.log("extension same length as file, must be director!")
+            return "dir"
+        }
         return ext.split('').reverse().join('');
     }
 
@@ -579,6 +592,7 @@ function loadContent() {
 
     }
     function fetchDirContent(path) {
+        
         fetch('/api/getDirContent', {
             method: "POST",
             headers: {
@@ -598,6 +612,7 @@ function loadContent() {
             console.log("Error: ", error)
         })
     }
+
     document.getElementById("fileUpload").addEventListener('change', (event) => {
         const files = event.target.files;
         if(files.length > 0) {
@@ -618,18 +633,13 @@ function loadContent() {
                 body: formData,
             }).then(response => {
                 if (!response.ok) {
-                    notiMessage.textContent = "Error Received: " + response.status
+                    notiMessage.textContent = "Error Received: " + response.statusText
                     banner.classList.add("show");
-                    return;s
+                    return;
                 }
                 return response.json()
             }).then(data => {
-                console.log('Success: ', data);
-                notiMessage.textContent = "File uploaded successfully"
-                banner.classList.add("show");
-                // TODO need to add file to UI
-
-                // fetchDirContent();
+                addFileToDOM(formData.get("file"));
             }).catch((error) => {
                 console.error("Error: ", error);
                 notiMessage.textContent = "Error Received: " + error
@@ -770,75 +780,147 @@ document.addEventListener('DOMContentLoaded', (event) => {
 })
 
 
+function createFileIcon() {
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("xmlns", svgNS);
+    svg.setAttribute("width", "24");
+    svg.setAttribute("height", "24");
+    svg.setAttribute("fill", "currentColor");
+    svg.setAttribute("class", "bi-file");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    const path1 = document.createElementNS(svgNS, "path");
+    path1.setAttribute("d", "M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5");
+    const path2 = document.createElementNS(svgNS, "path");
+    path2.setAttribute("d", "M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z");
+    svg.appendChild(path1);   
+    svg.appendChild(path2);
+    return svg;
+}
+function createFolderIcon() {
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("xmlns", svgNS);
+    svg.setAttribute("width", "24");
+    svg.setAttribute("height", "24");
+    svg.setAttribute("fill", "currentColor");
+    svg.setAttribute("class", "bi-file");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    const path1 = document.createElementNS(svgNS, "path");
+    path1.setAttribute("d", "M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31zM2.19 4a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zm4.69-1.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139q.323-.119.684-.12h5.396z");
+    svg.appendChild(path1);   
+    return svg;
+}
+function createImgIcon() {
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("xmlns", svgNS);
+    svg.setAttribute("width", "24");
+    svg.setAttribute("height", "24");
+    svg.setAttribute("fill", "currentColor");
+    svg.setAttribute("class", "bi-file");
+    svg.setAttribute("viewBox", "0 0 16 16");
+    const path1 = document.createElementNS(svgNS, "path");
+    path1.setAttribute("d", "M6.502 7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3");
+    const path2 = document.createElementNS(svgNS, "path");
+    path2.setAttribute("d", "M14 14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM4 1a1 1 0 0 0-1 1v10l2.224-2.224a.5.5 0 0 1 .61-.075L8 11l2.157-3.02a.5.5 0 0 1 .76-.063L13 10V4.5h-2A1.5 1.5 0 0 1 9.5 3V1z");
+    svg.appendChild(path1);   
+    svg.appendChild(path2);
+    return svg;
+}
 
+function createFileDiv() {
+    let fileDiv = document.createElement('div');
+    fileDiv.className = filePanelClasses.fileDiv;
+    return fileDiv
+}
+
+function createFileLabel()  {
+    let label = document.createElement('label');
+    label.className = filePanelClasses.label;
+    return label
+}
+
+
+function createFileComponents(name, type) {
+    let svg;
+    // todo add image icon as an option
+    if (type === "dir") {
+        svg = createFolderIcon()
+    } else {
+        svg = createFileIcon()
+    }
+    let fileDiv = createFileDiv();
+    let label = createFileLabel();
+    label.textContent = name;
+    fileDiv.appendChild(svg);
+    fileDiv.appendChild(label);
+    
+    return fileDiv;
+}
+
+function createRowDiv() {
+    let rowDiv = document.createElement('div');
+    rowDiv.className = filePanelClasses.rowDiv;
+    return rowDiv
+}
+
+function addFileToDOM(file) {
+    // append the uploaded file to the DOM
+    let page = pages[curPage];
+    let items = numItems[curPage];
+    let curRow;
+    if (items % FILES_PER_ROW === 0) {
+        console.log("Making a new row...")
+        curRow = createRowDiv();
+        mainPanel.appendChild(curRow); 
+    } else {
+        // use existing row...
+        curRow = page.pop();
+    }
+
+    let fileName = file.name
+    // todo: need to check if row is full (make a new row then)
+    fileDiv = createFileComponents(fileName, "file")
+    curRow.appendChild(fileDiv);
+
+    // put the row back into the pages
+    page.push(curRow);
+    addFileListeners();
+
+    // update number of items
+    numItems[curPage]++;
+}
 
 function loadFilesDOM(files) {
+    // load received files and folderes ono the DOM
 
-    function createFileIcon() {
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("xmlns", svgNS);
-        svg.setAttribute("width", "24");
-        svg.setAttribute("height", "24");
-        svg.setAttribute("fill", "currentColor");
-        svg.setAttribute("class", "bi-file");
-        svg.setAttribute("viewBox", "0 0 16 16");
-        const path1 = document.createElementNS(svgNS, "path");
-        path1.setAttribute("d", "M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5");
-        const path2 = document.createElementNS(svgNS, "path");
-        path2.setAttribute("d", "M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z");
-        svg.appendChild(path1);   
-        svg.appendChild(path2);
-        return svg;
-    }
-    function createFolderIcon() {
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("xmlns", svgNS);
-        svg.setAttribute("width", "24");
-        svg.setAttribute("height", "24");
-        svg.setAttribute("fill", "currentColor");
-        svg.setAttribute("class", "bi-file");
-        svg.setAttribute("viewBox", "0 0 16 16");
-        const path1 = document.createElementNS(svgNS, "path");
-        path1.setAttribute("d", "M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31zM2.19 4a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zm4.69-1.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139q.323-.119.684-.12h5.396z");
-        svg.appendChild(path1);   
-        return svg;
-    }
-    function createImgIcon() {
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("xmlns", svgNS);
-        svg.setAttribute("width", "24");
-        svg.setAttribute("height", "24");
-        svg.setAttribute("fill", "currentColor");
-        svg.setAttribute("class", "bi-file");
-        svg.setAttribute("viewBox", "0 0 16 16");
-        const path1 = document.createElementNS(svgNS, "path");
-        path1.setAttribute("d", "M6.502 7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3");
-        const path2 = document.createElementNS(svgNS, "path");
-        path2.setAttribute("d", "M14 14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM4 1a1 1 0 0 0-1 1v10l2.224-2.224a.5.5 0 0 1 .61-.075L8 11l2.157-3.02a.5.5 0 0 1 .76-.063L13 10V4.5h-2A1.5 1.5 0 0 1 9.5 3V1z");
-        svg.appendChild(path1);   
-        svg.appendChild(path2);
-        return svg;
-    }
-    
-    
+    // TODO determine which page we are on
+
     let numFiles = 0;
     let svg;
-    let rowDiv = document.createElement('div');
-    let main = document.getElementById('main');
-    main.appendChild(rowDiv);
-
-    // ONE IDEA COULD BE TO CALC HOW MANY ROWS i WILL NEED, STORE EACH ROW IN AN ARRAY THAN ITERATE THROUGH ?
-
-    rowDiv.className = filePanelClasses.rowDiv;
+    let rowDiv;
+    let curPageRows;
     Object.keys(files).forEach(key => {
         // TODO need to perform a check to ensure I don't display the current folder
+
+        if (numFiles % FILES_PER_ROW === 0) {
+            // put old row div onto dom, store in array
+            if (numFiles != 0) {
+                mainPanel.appendChild(rowDiv);
+                curPageRows = pages[curPage];
+                curPageRows.push(rowDiv) // added row i to the pages rows
+            }
+            
+            // create new empty row
+            rowDiv = createRowDiv();
+        }
         
-        console.log("Key: ", key)
+        // unpack
         let vals = files[key]
         let fileName = key
+        // TODO can determine file type here
+        
         let isDir = vals[fileIdxNames.dir]
         if (isDir === 'true') {
             // make dir icon
@@ -846,25 +928,24 @@ function loadFilesDOM(files) {
         } else {
             svg = createFileIcon()
         }
-        // create file div
-        let fileDiv = document.createElement('div');
-        let label = document.createElement('label');
-        fileDiv.className = filePanelClasses.fileDiv;
-        label.className = filePanelClasses.label;
-        label.textContent = fileName;
-        fileDiv.appendChild(svg)
-        fileDiv.appendChild(label)
-        
-        if (numFiles > FILES_PER_ROW) {
-            // TODO will need to test this out and see what happens...
 
-            // create a new row element
-        } else {
-            rowDiv.appendChild(fileDiv);
-        }
-        numFiles++;
+        // create file div & label
+        let fileDiv = createFileDiv();
+        let label = createFileLabel();
+        label.textContent = fileName;
+        fileDiv.appendChild(svg);
+        fileDiv.appendChild(label);
         
+        rowDiv.appendChild(fileDiv);
+        numFiles++;
     })
+
+    mainPanel.appendChild(rowDiv);
+    curPageRows = pages[curPage];
+    curPageRows.push(rowDiv) 
+    
+    // store the number of items on the current page
+    numItems[curPage] = numFiles;
     addFileListeners();
 }
 
