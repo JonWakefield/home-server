@@ -255,24 +255,24 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		})
 	})
 
-	r.POST("/api/downloadFile", func(c *gin.Context) {
+	r.GET("/api/downloadFile", func(c *gin.Context) {
 		// verify user token
-		_, valid := auth.VerifyToken(c, db)
+		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
 		}
-
-		var payload home.Payload
-
-		if err := c.ShouldBindJSON(&payload); err != nil {
-			// did not successfully receive payload from user
+		user, err := database.RetrieveUser(db, userId)
+		if err != nil {
+			// didnt receive a user, return
 			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "No payload uploaded",
+				"error": err.Error(),
 			})
 			return
 		}
-		home.DownloadFile(c, payload.FileName, payload.Path)
-		fmt.Println("File sent back...")
+		// retrieve path from query:
+		path := c.Query("path")
+		fullPath := utils.CreateFullPath(user.Directory, path)
+		home.RetrieveFile(c, fullPath)
 	})
 
 	r.POST("/api/renamefile", func(c *gin.Context) {
@@ -409,24 +409,24 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 	})
 
-	r.POST("/api/previewFile", func(c *gin.Context) {
+	r.GET("/api/previewFile", func(c *gin.Context) {
 		// verify user token
-		_, valid := auth.VerifyToken(c, db)
+		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
 		}
-		var payload home.Payload
-		if err := c.ShouldBindJSON(&payload); err != nil {
+		user, err := database.RetrieveUser(db, userId)
+		if err != nil {
+			// didnt receive a user, return
 			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "No payload found.",
+				"error": err.Error(),
 			})
 			return
 		}
-
-		// TODO change name from `downloadFile` to retrieve file or something
-		home.DownloadFile(c, payload.FileName, payload.Path)
-		fmt.Println("File sent back...")
-
+		// retrieve path from query:
+		path := c.Query("path")
+		fullPath := utils.CreateFullPath(user.Directory, path)
+		home.RetrieveFile(c, fullPath)
 	})
 
 	return r

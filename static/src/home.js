@@ -629,17 +629,14 @@ function loadContent() {
         }
 
         let fileName = file.querySelector('label').textContent
-        let payload = {
-            fileName: fileName,
-            path: userInfo.directory,
-        }
+        const curParams = getQueryParam("path")
+        const url = `/api/downloadFile?path=${curParams}/${fileName}`
 
-        fetch('/api/downloadFile', {
-            method: 'POST',
+        fetch(url, {
+            method: 'GET',
             headers: {
                 'Content-Type': "application/json"
-            },
-            body: JSON.stringify(payload)
+            }
         }).then(response => {
             if (!response.ok) {
                 notiMessage.textContent = "HTTP Error: " + response.statusText
@@ -698,7 +695,6 @@ function loadContent() {
             return;
         }
         let fileName = file.querySelector('label').textContent;
-
         let extension = getExtension(fileName);
         let extType = getExtType(extension);
         if (!extType) {
@@ -706,19 +702,14 @@ function loadContent() {
             banner.classList.add("show");
             return;
         }
+        const curParams = getQueryParam("path")
+        const url = `/api/previewFile?path=${curParams}/${fileName}`
 
-
-        let payload = {
-            fileName: fileName,
-            path: userInfo.directory,
-        }
-
-        fetch("/api/previewFile", {
-            method: "POST",
+        fetch(url, {
+            method: "GET",
             headers: {
                 'Content-Type': "application/json",
             },
-            body: JSON.stringify(payload)
         }).then(response => {
             if(!response.ok) {
                 notiMessage.textContent = "HTTP Error: " + response.statusText

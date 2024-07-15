@@ -21,11 +21,8 @@ type Payload struct {
 
 type DirContents map[string][]string
 
-// TODO change this to a method for payload
-func DownloadFile(c *gin.Context, name, path string) {
-	// add file to body stream for user downloading
-	fullPath := path + "/" + name
-	c.File(fullPath)
+func RetrieveFile(c *gin.Context, path string) {
+	c.File(path)
 }
 
 func (load *Payload) RenameFile() error {
