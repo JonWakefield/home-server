@@ -13,10 +13,13 @@ import (
 )
 
 // I hate this struct name
-type Payload struct {
+type Rename struct {
 	NewFileName string `json:"newFileName"`
 	FileName    string `json:"fileName"`
-	Path        string `json:"path"`
+}
+
+type Folder struct {
+	Name string `json:"Name"`
 }
 
 type DirContents map[string][]string
@@ -25,13 +28,13 @@ func RetrieveFile(c *gin.Context, path string) {
 	c.File(path)
 }
 
-func (load *Payload) RenameFile() error {
+func RenameFile(path, name, newName string) error {
 
-	oldPath := load.Path + "/" + load.FileName
+	oldPath := path + "/" + name
 
 	dir := filepath.Dir(oldPath)
 
-	newPath := filepath.Join(dir, load.NewFileName)
+	newPath := filepath.Join(dir, newName)
 
 	// rename the file
 	err := os.Rename(oldPath, newPath)
@@ -42,11 +45,8 @@ func (load *Payload) RenameFile() error {
 
 }
 
-func (load *Payload) DeleteFile() error {
-	// delete file
-	fullPath := load.Path + "/" + load.FileName
-
-	err := os.Remove(fullPath)
+func DeleteFile(path string) error {
+	err := os.Remove(path)
 	if err != nil {
 		return err
 	}
@@ -61,9 +61,9 @@ func DirExists(path string) bool {
 	return true
 }
 
-func (load *Payload) AddDirectory() (bool, error) {
+func AddDirectory(path, name string) (bool, error) {
 	// add a new directory for the users storage
-	fullPath := load.Path + "/" + load.NewFileName
+	fullPath := path + "/" + name
 
 	if DirExists(fullPath) {
 		return true, nil

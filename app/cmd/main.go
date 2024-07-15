@@ -275,21 +275,33 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		home.RetrieveFile(c, fullPath)
 	})
 
-	r.POST("/api/renamefile", func(c *gin.Context) {
+	r.PATCH("/api/renameFile", func(c *gin.Context) {
 		// verify user token
-		_, valid := auth.VerifyToken(c, db)
+		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
 		}
-		var payload home.Payload
-		if err := c.ShouldBindJSON(&payload); err != nil {
+		var rename home.Rename
+		if err := c.ShouldBindJSON(&rename); err != nil {
 			// did not successfully receive payload from user
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "No payload uploaded",
 			})
 			return
 		}
-		err := payload.RenameFile()
+		user, err := database.RetrieveUser(db, userId)
+		if err != nil {
+			// didnt receive a user, return
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		// retrieve path from query:
+		path := c.Query("path")
+		fullPath := utils.CreateFullPath(user.Directory, path)
+
+		err = home.RenameFile(fullPath, rename.FileName, rename.NewFileName)
 		if err != nil {
 			log.Printf("Failed to Rename file. Error: %v ", err)
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -302,20 +314,23 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		})
 	})
 
-	r.POST("/api/deleteFile", func(c *gin.Context) {
+	r.DELETE("/api/deleteFile", func(c *gin.Context) {
 		// verify user token
-		_, valid := auth.VerifyToken(c, db)
+		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
 		}
-		var payload home.Payload
-		if err := c.ShouldBindJSON(&payload); err != nil {
+		user, err := database.RetrieveUser(db, userId)
+		if err != nil {
+			// didnt receive a user, return
 			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "No payload found.",
+				"error": err.Error(),
 			})
 			return
 		}
-		err := payload.DeleteFile()
+		path := c.Query("path")
+		fullPath := utils.CreateFullPath(user.Directory, path)
+		err = home.DeleteFile(fullPath)
 		if err != nil {
 			log.Printf("Failed to Delete file. Error: %v ", err)
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -330,18 +345,29 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 	r.POST("/api/addFolder", func(c *gin.Context) {
 		// verify user token
-		_, valid := auth.VerifyToken(c, db)
+		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
 		}
-		var payload home.Payload
-		if err := c.ShouldBindJSON(&payload); err != nil {
+		user, err := database.RetrieveUser(db, userId)
+		if err != nil {
+			// didnt receive a user, return
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		// retrieve path from query:
+		path := c.Query("path")
+		fullPath := utils.CreateFullPath(user.Directory, path)
+		var folder home.Folder
+		if err := c.ShouldBindJSON(&folder); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "No payload found.",
 			})
 			return
 		}
-		exists, err := payload.AddDirectory()
+		exists, err := home.AddDirectory(fullPath, folder.Name)
 		if exists {
 			c.JSON(http.StatusOK, gin.H{
 				"message": "Folder already Exists",

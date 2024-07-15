@@ -180,11 +180,14 @@ function loadContent() {
             addFolderErr.style.display = "block";
             return;
         }
+        const curParams = getQueryParam("path")
+        const url = `/api/addFolder?path=${curParams}`
+
         let payload = {
-            newFileName: folderName,
-            path: userInfo.directory,
+            Name: folderName,
         }
-        fetch('/api/addFolder', {
+
+        fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -244,17 +247,14 @@ function loadContent() {
 
     function deleteFile() {
         let fName = delFileLabel.textContent;
-        let payload = {
-            fileName: fName,
-            path: userInfo.directory,
-        }
+        const curParams = getQueryParam("path")
+        const url = `/api/deleteFile?path=${curParams}/${fName}`
 
-        fetch('/api/deleteFile', {
-            method: "POST",
+        fetch(url, {
+            method: "DELETE",
             headers: {
                 'Content-Type': "application/json",
-            },
-            body: JSON.stringify(payload)
+            }
         }).then(response => {
             if (!response.ok) {
                 delFileLabel.textContent = "HTTP Error: " + response.statusText;
@@ -345,14 +345,15 @@ function loadContent() {
     
         let extension = getExtension(oldName)
         newName = appendExt(newName, extension)
-    
+
+        const curParams = getQueryParam("path")
+        const url = `/api/renameFile?path=${curParams}`
         let payload = {
             newFileName: newName,
             fileName: oldName,
-            path: userInfo.directory,
         }
-        fetch('/api/renamefile', {
-            method: "POST",
+        fetch(url, {
+            method: "PATCH",
             headers: {
                 'Content-Type': "application/json",
             },
