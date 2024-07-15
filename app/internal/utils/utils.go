@@ -76,3 +76,11 @@ func DelDir(path string) error {
 	}
 	return nil
 }
+
+func CreateFullPath(base, new string) string {
+	n := new[4:]
+	if n != "" {
+		return base + "/" + n
+	}
+	return base
+}

@@ -120,8 +120,8 @@ func setupRouter(db *sql.DB) *gin.Engine {
 	})
 
 	// ---- home page routes ------
-
 	r.GET("/home", func(c *gin.Context) {
+
 		_, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
@@ -156,14 +156,18 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 	r.POST("/api/getDirContent", func(c *gin.Context) {
 
+		// veryify user
 		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
 		}
-		var user models.User
+		// retrieve path from query:
+		path := c.Query("path")
 
+		var user models.User
 		if err := c.ShouldBindJSON(&user); err != nil {
 			// no user data sent, use userId obtained from VerifyToken
+			fmt.Println("User info not passed in!")
 			user, err = models.RetrieveUser(db, userId)
 			if err != nil {
 				// didnt receive a user, return
@@ -172,10 +176,14 @@ func setupRouter(db *sql.DB) *gin.Engine {
 				})
 				return
 			}
+		} else {
+			fmt.Println("User info passed in")
 		}
 
+		fullPath := utils.CreateFullPath(user.Directory, path)
+		fmt.Println("Full Path: ", fullPath)
 		// get the content from the users directory, return file names back to user
-		contents, err := user.GetFileNames()
+		contents, err := home.GetFileNames(fullPath)
 
 		if err != nil {
 			log.Printf("Error reading in file names: %v", err)

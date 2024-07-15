@@ -35,10 +35,6 @@ let main = document.getElementById('main');
 let delAcc = false;
 
 
-function addFile() {
-    // adds file to the DOM
-}
-
 function loadContent() {
 
     const userPanelClasses = {
@@ -376,6 +372,7 @@ function loadContent() {
             console.log("Response: ", data)
             renameFileModal.style.display = "none";
             renameInput.value = "";
+            renameFileDOM(oldName, newName)
         }).catch(e => {
             console.error("Error received: ", e)
             notiMessage.textContent = "Error Received: " + e
@@ -586,27 +583,6 @@ function loadContent() {
         })
 
     }
-    function fetchDirContent(path) {
-        
-        fetch('/api/getDirContent', {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(userInfo)
-        }).then(response => {
-            if(!response.ok) {
-                throw new Error("Failed to retrieve content ", response.statusText)
-            }
-            return response.json()
-        }).then(data => {
-            let files = data.files
-            console.log("Content: ", files)
-            loadFilesDOM(files)
-        }).catch(error => {
-            console.log("Error: ", error)
-        })
-    }
 
     document.getElementById("fileUpload").addEventListener('change', (event) => {
         const files = event.target.files;
@@ -774,6 +750,37 @@ document.addEventListener('DOMContentLoaded', (event) => {
     loadContent()
 })
 
+function getQueryParam(param) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(param)
+}
+
+function fetchDirContent(path) {
+
+
+    const curParams = getQueryParam("path")
+    const url = `/api/getDirContent?path=${curParams}`
+        
+    fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userInfo)
+    }).then(response => {
+        if(!response.ok) {
+            throw new Error("Failed to retrieve content ", response.statusText)
+        }
+        return response.json()
+    }).then(data => {
+        let files = data.files
+        console.log("Content: ", files)
+        loadFilesDOM(files)
+    }).catch(error => {
+        console.log("Error: ", error)
+    })
+}
+
 
 function createFileIcon() {
     const svgNS = "http://www.w3.org/2000/svg";
@@ -881,22 +888,43 @@ function addFileToDOM(name, type) {
 
     // put the row back into the pages
     page.push(curRow);
+
+    // THIS LINE IS UNTEST BUT I BELIEVE IT IS NEEDED
+    pages[curPage] = page
+
+
     addFileListeners();
 
     // update number of items
     numItems[curPage]++;
 }
 
+function renameFileDOM(oldName, newName) {
+    // rename the on the DOM
+    let page = pages[curPage];
+
+    for (const row of page) {
+
+        Array.from(row.children).forEach(file => {
+            let label = file.querySelector('label');
+            if (label.textContent === oldName) {
+                label.textContent = newName
+            }
+        })
+    }
+}
+
 
 function loadFilesDOM(files) {
     // load received files and folderes ono the DOM
 
-    // TODO determine which page we are on
-
+    
+    let page = pages[curPage];
     let numFiles = 0;
     let svg;
     let rowDiv;
     let curPageRows;
+
     Object.keys(files).forEach(key => {
         // TODO need to perform a check to ensure I don't display the current folder
 
@@ -904,8 +932,7 @@ function loadFilesDOM(files) {
             // put old row div onto dom, store in array
             if (numFiles != 0) {
                 mainPanel.appendChild(rowDiv);
-                curPageRows = pages[curPage];
-                curPageRows.push(rowDiv) // added row i to the pages rows
+                page.push(rowDiv) // added row i to the pages rows
             }
             
             // create new empty row
@@ -918,31 +945,36 @@ function loadFilesDOM(files) {
         // TODO can determine file type here
         
         let isDir = vals[fileIdxNames.dir]
-        if (isDir === 'true') {
-            // make dir icon
-            svg = createFolderIcon()
-        } else {
-            svg = createFileIcon()
-        }
-
+        
         // create file div & label
         let fileDiv = createFileDiv();
         let label = createFileLabel();
         label.textContent = fileName;
+        
+        if (isDir === 'true') {
+            // make dir icon
+            svg = createFolderIcon()
+            fileDiv.classList.add('folder')
+        } else {
+            svg = createFileIcon()
+        }
+        
         fileDiv.appendChild(svg);
         fileDiv.appendChild(label);
-        
         rowDiv.appendChild(fileDiv);
         numFiles++;
     })
 
     mainPanel.appendChild(rowDiv);
-    curPageRows = pages[curPage];
-    curPageRows.push(rowDiv) 
+    page.push(rowDiv) 
+
+    // THIS LINE IS UNTEST BUT I BELIEVE IT IS NEEDED
+    pages[curPage] = page
     
     // store the number of items on the current page
     numItems[curPage] = numFiles;
     addFileListeners();
+    addFolderListeners();
 }
 
 function addFileListeners() {
@@ -967,6 +999,18 @@ function addFileListeners() {
     })
 }
 
+
+
+function addFolderListeners() {
+    document.querySelectorAll('.folder').forEach(item => {
+        item.addEventListener('dblclick', function() {
+            let fName = item.querySelector('label').textContent;
+            const curParams = getQueryParam("path")
+            let newParam = curParams + "/" + fName
+            window.location.href = `${window.location.pathname}?path=${encodeURIComponent(newParam)}`
+        })
+    })
+}
 
 function goBack() {
     console.log("called")

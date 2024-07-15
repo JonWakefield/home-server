@@ -3,6 +3,8 @@ package home
 import (
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,6 +15,8 @@ type Payload struct {
 	FileName    string `json:"fileName"`
 	Path        string `json:"path"`
 }
+
+type DirContents map[string][]string
 
 // TODO change this to a method for payload
 func DownloadFile(c *gin.Context, name, path string) {
@@ -70,4 +74,32 @@ func (load *Payload) AddDirectory() (bool, error) {
 		return false, err
 	}
 	return false, nil
+}
+
+func getCurDir(dir string) string {
+	res := strings.Split(dir, "/")
+	return res[len(res)-1]
+}
+
+func GetFileNames(path string) (DirContents, error) {
+	// given a path, return all the files and folders inside of the path
+	var name string
+	files := make(DirContents)
+
+	curDir := getCurDir(path)
+
+	err := filepath.WalkDir(path, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		dir := strconv.FormatBool(d.IsDir())
+		if d.Name() == curDir {
+			name = ".."
+		} else {
+			name = d.Name()
+		}
+		files[name] = []string{dir}
+		return nil
+	})
+	return files, err
 }

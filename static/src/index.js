@@ -269,7 +269,7 @@ function loadSidebar() {
       const login = data.login
       if (login) {
         // redirect user to there home page 
-        window.location.href = "/home";
+        window.location.href = '/home?path=home';
         signInModal.style.display = "none";
         signInPassword.value = "";
         signInError.style.display = "none";
