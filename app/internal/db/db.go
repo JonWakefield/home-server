@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"home-server/internal/models"
 	"log"
 	"os"
 
@@ -64,6 +65,22 @@ func InitDB() *sql.DB {
 	createTokensTable(db)
 	fmt.Println("Initialized Database successfully...")
 	return db
+}
+
+func RetrieveUser(db *sql.DB, id int) (models.User, error) {
+
+	var storedUser models.User
+	query := "SELECT * FROM Users WHERE Id = ?"
+	err := db.QueryRow(query, id).Scan(&storedUser.ID,
+		&storedUser.Name,
+		&storedUser.Password,
+		&storedUser.Directory,
+		&storedUser.CreatedAt,
+		&storedUser.TotalStorage)
+	if err != nil {
+		return storedUser, err
+	}
+	return storedUser, nil
 }
 
 func GetUserID(db *sql.DB, token string) (int, error) {

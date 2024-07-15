@@ -10,7 +10,6 @@ import (
 	"home-server/internal/utils"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -73,17 +72,20 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		fmt.Println("User: ", user)
+		sentPassword := user.Password
 
 		// call function
-		success, err := user.SignIn(db)
+		user, err := database.RetrieveUser(db, user.ID)
+		fmt.Println("User: ", user)
 		if err != nil {
+			log.Printf("Encountered an error retrieving user info: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
 				"login": false,
 			})
 			return
 		}
+		success := user.VerifySignIn(db, sentPassword)
 		if !success {
 			// user provided the wrong password, inform...
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -136,7 +138,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			return
 		}
 
-		user, err := models.RetrieveUser(db, userId)
+		user, err := database.RetrieveUser(db, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "Failed to retrieve user info",
@@ -168,7 +170,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		if err := c.ShouldBindJSON(&user); err != nil {
 			// no user data sent, use userId obtained from VerifyToken
 			fmt.Println("User info not passed in!")
-			user, err = models.RetrieveUser(db, userId)
+			user, err = database.RetrieveUser(db, userId)
 			if err != nil {
 				// didnt receive a user, return
 				c.JSON(http.StatusBadRequest, gin.H{
@@ -200,13 +202,24 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 	r.POST("/api/uploadFile", func(c *gin.Context) {
 
-		// unpack user data
-		id, _ := strconv.Atoi(c.PostForm("id"))
-		user := models.User{
-			ID:        id,
-			Name:      c.PostForm("name"),
-			Directory: c.PostForm("directory"),
+		// veryify user
+		userId, valid := auth.VerifyToken(c, db)
+		if !valid {
+			return
 		}
+		// retrieve path from query:
+		path := c.Query("path")
+		fmt.Println("Query Path: ", path)
+
+		user, err := database.RetrieveUser(db, userId)
+		if err != nil {
+			// didnt receive a user, return
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
 		// unpack uploaded file
 		file, err := c.FormFile("file")
 		if err != nil {
@@ -215,7 +228,9 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			})
 			return
 		}
-		success := user.SaveFile(c, db, file)
+		fullPath := utils.CreateFullPath(user.Directory, path)
+		fmt.Println("full path: ", fullPath)
+		success := home.SaveFile(c, fullPath, file)
 		if !success {
 			return
 		}

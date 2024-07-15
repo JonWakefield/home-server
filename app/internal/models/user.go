@@ -5,10 +5,7 @@ import (
 	"fmt"
 	"home-server/internal/utils"
 	"log"
-	"mime/multipart"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -131,42 +128,19 @@ func RetrieveUsers(db *sql.DB) []User {
 	return users
 }
 
-func RetrieveUser(db *sql.DB, id int) (User, error) {
-
-	var storedUser User
-	query := "SELECT * FROM Users WHERE Id = ?"
-	err := db.QueryRow(query, id).Scan(&storedUser.ID,
-		&storedUser.Name,
-		&storedUser.Password,
-		&storedUser.Directory,
-		&storedUser.CreatedAt,
-		&storedUser.TotalStorage)
-	if err != nil {
-		return User{}, err
-	}
-	return storedUser, nil
-}
-
-func (user *User) verifyPassword(hashedPassword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password))
+func (user *User) verifyPassword(sentPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(sentPassword))
 	return err == nil
 }
 
-func (user *User) SignIn(db *sql.DB) (bool, error) {
+func (user *User) VerifySignIn(db *sql.DB, sentPassword string) bool {
 	// called on user sign in
-	retrUser, err := RetrieveUser(db, user.ID)
-	if err != nil {
-		log.Printf("Encountered an error retrieving user info: %v", err)
-		return false, err
-	}
-	match := user.verifyPassword(retrUser.Password)
+	match := user.verifyPassword(sentPassword)
 	if !match {
 		log.Printf("Failed loggin attempt. User: %s ", user.Name)
-		return false, nil
+		return false
 	}
-	fmt.Println("User verification Complete!")
-
-	return true, nil
+	return true
 }
 
 func (user *User) StoreToken(db *sql.DB, token, exp string) error {
@@ -179,18 +153,6 @@ func (user *User) StoreToken(db *sql.DB, token, exp string) error {
 		return err
 	}
 	return nil
-}
-
-func (user *User) SaveFile(c *gin.Context, db *sql.DB, file *multipart.FileHeader) bool {
-
-	filePath := fmt.Sprintf("%s/%s", user.Directory, file.Filename)
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"Message": "Failed to save the file",
-		})
-		return false
-	}
-	return true
 }
 
 func (user *User) UpdateStorageAmt(db *sql.DB) {

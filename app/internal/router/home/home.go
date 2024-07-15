@@ -1,6 +1,9 @@
 package home
 
 import (
+	"fmt"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -102,4 +105,16 @@ func GetFileNames(path string) (DirContents, error) {
 		return nil
 	})
 	return files, err
+}
+
+func SaveFile(c *gin.Context, path string, file *multipart.FileHeader) bool {
+
+	filePath := fmt.Sprintf("%s/%s", path, file.Filename)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"Message": "Failed to save the file",
+		})
+		return false
+	}
+	return true
 }

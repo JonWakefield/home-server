@@ -591,15 +591,13 @@ function loadContent() {
             console.log('File Selected: ', file.name)
     
             const formData = new FormData();
-    
             formData.append('file', file);
-            formData.append('id', userInfo.id);
-            formData.append('name', userInfo.name);
-            formData.append('directory', userInfo.directory);
-    
-    
+
+            const curParams = getQueryParam("path")
+            const url = `/api/uploadFile?path=${curParams}`
+   
             // call API to store file
-            fetch("/api/uploadFile", {
+            fetch(url, {
                 method: "POST",
                 body: formData,
             }).then(response => {
@@ -846,15 +844,17 @@ function createFileLabel()  {
 
 function createFileComponents(name, type) {
     let svg;
-    // todo add image icon as an option
-    if (type === "dir") {
-        svg = createFolderIcon()
-    } else {
-        svg = createFileIcon()
-    }
     let fileDiv = createFileDiv();
     let label = createFileLabel();
     label.textContent = name;
+    
+    // todo add image icon as an option
+    if (type === "dir") {
+        svg = createFolderIcon()
+        fileDiv.classList.add('folder')
+    } else {
+        svg = createFileIcon()
+    }
     fileDiv.appendChild(svg);
     fileDiv.appendChild(label);
     
@@ -892,8 +892,9 @@ function addFileToDOM(name, type) {
     // THIS LINE IS UNTEST BUT I BELIEVE IT IS NEEDED
     pages[curPage] = page
 
-
+    // TODO we can improve this
     addFileListeners();
+    addFolderListeners();
 
     // update number of items
     numItems[curPage]++;
@@ -1002,6 +1003,7 @@ function addFileListeners() {
 
 
 function addFolderListeners() {
+    console.log("Called")
     document.querySelectorAll('.folder').forEach(item => {
         item.addEventListener('dblclick', function() {
             let fName = item.querySelector('label').textContent;
