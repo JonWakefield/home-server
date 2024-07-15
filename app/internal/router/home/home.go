@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +20,7 @@ type Folder struct {
 	Name string `json:"Name"`
 }
 
-type DirContents map[string][]string
+type DirContents map[string]bool
 
 func RetrieveFile(c *gin.Context, path string) {
 	c.File(path)
@@ -76,31 +74,29 @@ func AddDirectory(path, name string) (bool, error) {
 	return false, nil
 }
 
-func getCurDir(dir string) string {
-	res := strings.Split(dir, "/")
-	return res[len(res)-1]
-}
-
-func GetFileNames(path string) (DirContents, error) {
+func GetFileNames(root, path string) (DirContents, error) {
 	// given a path, return all the files and folders inside of the path
-	var name string
+
 	files := make(DirContents)
 
-	curDir := getCurDir(path)
+	// curDir := getCurDir(path)
 
-	err := filepath.WalkDir(path, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		dir := strconv.FormatBool(d.IsDir())
-		if d.Name() == curDir {
-			name = ".."
-		} else {
-			name = d.Name()
-		}
-		files[name] = []string{dir}
-		return nil
-	})
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return files, err
+	}
+	for _, entry := range entries {
+		dir := entry.IsDir()
+		files[entry.Name()] = dir
+	}
+
+	// create return dir:
+	if root == path {
+		fmt.Println("USER IN ROOT PATH")
+	} else {
+		files[".."] = true
+	}
+
 	return files, err
 }
 

@@ -156,37 +156,28 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		})
 	})
 
-	r.POST("/api/getDirContent", func(c *gin.Context) {
-
+	r.GET("/api/getDirContent", func(c *gin.Context) {
 		// veryify user
 		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
 		}
+		// retrieve user info
+		user, err := database.RetrieveUser(db, userId)
+		if err != nil {
+			// didnt receive a user, return
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 		// retrieve path from query:
 		path := c.Query("path")
-
-		var user models.User
-		if err := c.ShouldBindJSON(&user); err != nil {
-			// no user data sent, use userId obtained from VerifyToken
-			fmt.Println("User info not passed in!")
-			user, err = database.RetrieveUser(db, userId)
-			if err != nil {
-				// didnt receive a user, return
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": err.Error(),
-				})
-				return
-			}
-		} else {
-			fmt.Println("User info passed in")
-		}
-
 		fullPath := utils.CreateFullPath(user.Directory, path)
-		fmt.Println("Full Path: ", fullPath)
-		// get the content from the users directory, return file names back to user
-		contents, err := home.GetFileNames(fullPath)
+		fmt.Println("Retrieving content for path: ", fullPath)
 
+		// get the content from the users directory, return file names back to user
+		contents, err := home.GetFileNames(user.Directory, fullPath)
 		if err != nil {
 			log.Printf("Error reading in file names: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{

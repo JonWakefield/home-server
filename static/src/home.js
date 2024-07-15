@@ -35,6 +35,10 @@ let main = document.getElementById('main');
 let delAcc = false;
 
 
+let previewContainer;
+let previewModal;
+
+
 function loadContent() {
 
     const userPanelClasses = {
@@ -64,9 +68,9 @@ function loadContent() {
 
     // --- Preview File ---
     let preview = document.getElementById("previewFile");
-    let previewModal = document.getElementById("previewModal");
+    previewModal = document.getElementById("previewModal");
     let previewClose = document.getElementsByClassName("btn-close")[3];
-    let previewContainer = document.getElementById("preview-container");
+    previewContainer = document.getElementById("preview-container");
 
 
 
@@ -318,22 +322,6 @@ function loadContent() {
         }
         RenameFile(event, oldName, newName)
     })
-
-    function getExtension(file) {
-        // gets the extension for a given file
-        let ext = ""
-        for (let i = file.length - 1; i >= 0; i--) {
-            if (file[i] === ".") {
-                break
-            }
-            ext = ext + file[i]
-        }
-        if (ext.length === file.length) {
-            console.log("extension same length as file, must be director!")
-            return "dir"
-        }
-        return ext.split('').reverse().join('');
-    }
 
     function appendExt(name, ext) {
         return name + "." + ext
@@ -666,72 +654,6 @@ function loadContent() {
         })
     }
 
-    function getExtType(extension) {
-        if (imgExtensions.includes(extension)) {
-            return "image"
-        }
-        return "text";
-    }
-
-    function showImage(image) {
-        const img = document.createElement('img');
-        img.className = 'preview-image';
-        img.src = URL.createObjectURL(image);
-        previewContainer.appendChild(img);
-        return
-    }
-
-    function showIframe(text) {
-        const iframe = document.createElement('iframe');
-        iframe.className = 'preview-iframe';
-        iframe.src = URL.createObjectURL(text)
-        previewContainer.appendChild(iframe);
-    }
-
-    function previewFile() {
-        file = selectedFile;
-        if (!file) {
-            notiMessage.textContent = "Select a file to display"
-            banner.classList.add("show");
-            return;
-        }
-        let fileName = file.querySelector('label').textContent;
-        let extension = getExtension(fileName);
-        let extType = getExtType(extension);
-        if (!extType) {
-            notiMessage.textContent = "Can not open a preview for files of this type"
-            banner.classList.add("show");
-            return;
-        }
-        const curParams = getQueryParam("path")
-        const url = `/api/previewFile?path=${curParams}/${fileName}`
-
-        fetch(url, {
-            method: "GET",
-            headers: {
-                'Content-Type': "application/json",
-            },
-        }).then(response => {
-            if(!response.ok) {
-                notiMessage.textContent = "HTTP Error: " + response.statusText
-                banner.classList.add("show");
-                return
-            }
-            return response.blob()
-        }).then(blob => {
-            previewContainer.innerHTML = '';
-            // previewContainer.style.display = "block";
-            previewModal.style.display = "block";
-            if (extType === "image") {
-                showImage(blob)
-            } else if (extType === "text") {
-                showIframe(blob)
-            }
-        }).catch(e => {
-            console.error("Error: ", e)
-        })
-    }
-
     fetchUserInfo();
     fetchDirContent();
 }
@@ -740,23 +662,105 @@ document.addEventListener('DOMContentLoaded', (event) => {
     loadContent()
 })
 
+function getExtension(file) {
+    // gets the extension for a given file
+    let ext = ""
+    for (let i = file.length - 1; i >= 0; i--) {
+        if (file[i] === ".") {
+            break
+        }
+        ext = ext + file[i]
+    }
+    if (ext.length === file.length) {
+        console.log("extension same length as file, must be director!")
+        return "dir"
+    }
+    return ext.split('').reverse().join('');
+}
+
+function getExtType(extension) {
+    if (imgExtensions.includes(extension)) {
+        return "image"
+    }
+    return "text";
+}
+
+function showImage(image) {
+    const img = document.createElement('img');
+    img.className = 'preview-image';
+    img.src = URL.createObjectURL(image);
+    previewContainer.appendChild(img);
+    return
+}
+
+function showIframe(text) {
+    const iframe = document.createElement('iframe');
+    iframe.className = 'preview-iframe';
+    iframe.src = URL.createObjectURL(text)
+    previewContainer.appendChild(iframe);
+}
+
+function previewFile() {
+    file = selectedFile;
+    if (!file) {
+        notiMessage.textContent = "Select a file to display"
+        banner.classList.add("show");
+        return;
+    }
+    let fileName = file.querySelector('label').textContent;
+    let extension = getExtension(fileName);
+    let extType = getExtType(extension);
+    if (!extType) {
+        notiMessage.textContent = "Can not open a preview for files of this type"
+        banner.classList.add("show");
+        return;
+    }
+    const curParams = getQueryParam("path")
+    const url = `/api/previewFile?path=${curParams}/${fileName}`
+
+    fetch(url, {
+        method: "GET",
+        headers: {
+            'Content-Type': "application/json",
+        },
+    }).then(response => {
+        if(!response.ok) {
+            notiMessage.textContent = "HTTP Error: " + response.statusText
+            banner.classList.add("show");
+            return
+        }
+        return response.blob()
+    }).then(blob => {
+        previewContainer.innerHTML = '';
+        previewModal.style.display = "block";
+        if (extType === "image") {
+            showImage(blob)
+        } else if (extType === "text") {
+            showIframe(blob)
+        }
+    }).catch(e => {
+        console.error("Error: ", e)
+    })
+}
+
+
 function getQueryParam(param) {
     const params = new URLSearchParams(window.location.search);
     return params.get(param)
 }
 
-function fetchDirContent(path) {
+function fetchDirContent() {
+    // fetch names of (files + folders) to be displayed on the dom
 
-
+    // get cur dir from url params
     const curParams = getQueryParam("path")
     const url = `/api/getDirContent?path=${curParams}`
         
     fetch(url, {
-        method: "POST",
+        method: "GET",
         headers: {
             "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userInfo)
+        }
     }).then(response => {
         if(!response.ok) {
             throw new Error("Failed to retrieve content ", response.statusText)
@@ -933,23 +937,21 @@ function loadFilesDOM(files) {
         }
         
         // unpack
-        let vals = files[key]
-        let fileName = key
-        // TODO can determine file type here
-        
-        let isDir = vals[fileIdxNames.dir]
-        
+        let isDir = files[key]
+        let fileName = key        
+
         // create file div & label
         let fileDiv = createFileDiv();
         let label = createFileLabel();
         label.textContent = fileName;
         
-        if (isDir === 'true') {
+        if (isDir) {
             // make dir icon
             svg = createFolderIcon()
             fileDiv.classList.add('folder')
         } else {
             svg = createFileIcon()
+            fileDiv.classList.add('file')
         }
         
         fileDiv.appendChild(svg);
@@ -971,7 +973,7 @@ function loadFilesDOM(files) {
 }
 
 function addFileListeners() {
-    document.querySelectorAll('.file-spacing').forEach(item => {
+    document.querySelectorAll('.file').forEach(item => {
         item.addEventListener('click', function() {
             // TODO figure out how to deselect the cur. selected file
     
@@ -985,19 +987,19 @@ function addFileListeners() {
             
             // update reference
             selectedFile = item;
-    
-            // can perform other options here as well...
-            // ...
+        })
+        item.addEventListener('dblclick', function() {
+            // preview file on double click
+            previewFile();
         })
     })
 }
 
-
-
 function addFolderListeners() {
-    console.log("Called")
     document.querySelectorAll('.folder').forEach(item => {
         item.addEventListener('dblclick', function() {
+            // TODO do we need to apply a 'selectd-file' label to folder?
+
             let fName = item.querySelector('label').textContent;
             const curParams = getQueryParam("path")
             let newParam = curParams + "/" + fName
