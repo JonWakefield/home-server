@@ -225,24 +225,21 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		if !success {
 			return
 		}
-		// TODO Need to get users root path why ??
-		// ...
 
 		// get users new storage space used
 		size, err := utils.GetUserStorageAmt(user.Directory)
-
-		// convert to kb (use kb as base unit)
-		sizeConv := utils.UnitConverter(size, BASE_SIZE)
 		if err != nil {
 			log.Printf("Encountered error calculating users storage: %v", err)
 			// TODO Handle error (file was saved successfully so ...)
 		}
+
+		// convert to kb (use kb as base unit)
+		sizeConv := utils.UnitConverter(size, BASE_SIZE)
 		user.TotalStorage = sizeConv
 		user.UpdateStorageAmt(db)
 		fmt.Println("Directory total size: ", sizeConv)
 		c.JSON(http.StatusOK, gin.H{
-			"status":  "success",
-			"storage": size,
+			"status": "success",
 		})
 	})
 
@@ -333,6 +330,18 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			})
 			return
 		}
+
+		// update users total storage used
+		size, err := utils.GetUserStorageAmt(user.Directory)
+		if err != nil {
+			log.Printf("Encountered error calculating users storage: %v", err)
+			// TODO Handle error (file was saved successfully so ...)
+		}
+		// convert to kb (use kb as base unit)
+		sizeConv := utils.UnitConverter(size, BASE_SIZE)
+		user.TotalStorage = sizeConv
+		user.UpdateStorageAmt(db)
+
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Successfully Deleted file",
 			"success": true,
@@ -385,32 +394,19 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		})
 	})
 
-	r.POST("/api/deleteAccount", func(c *gin.Context) {
+	r.DELETE("/api/deleteAccount", func(c *gin.Context) {
 		// verify user token
 		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
 		}
-		var user models.User
-		if err := c.ShouldBindJSON(&user); err != nil {
+		user, err := database.RetrieveUser(db, userId)
+		if err != nil {
+			// didnt receive a user, return
 			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "No payload found.",
+				"error": err.Error(),
 			})
 			return
-		}
-		// double check user id is valid
-		if user.ID != userId {
-			fmt.Println("Not the same!")
-			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "Can not delete user",
-			})
-		}
-		// get root dir (i think this will be important when i add in file navigation)
-		rootDir, err := user.GetRootDir(db)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "Can not delete user",
-			})
 		}
 		err = user.DeleteAccount(db)
 		if err != nil {
@@ -418,7 +414,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 				"message": "Can not delete user",
 			})
 		}
-		err = utils.DelDir(rootDir)
+		err = utils.DelDir(user.Directory)
 		if err != nil {
 			log.Printf("Failed to delete users diretory. %v ", err)
 		}
@@ -428,7 +424,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		})
 		// TODO delete all tokens in tokens db for user
 		go database.DelUserTokens(db, userId)
-
 	})
 
 	r.GET("/api/previewFile", func(c *gin.Context) {

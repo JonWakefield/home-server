@@ -175,16 +175,4 @@ func (user *User) DeleteAccount(db *sql.DB) error {
 		return err
 	}
 	return nil
-
-}
-
-func (user *User) GetRootDir(db *sql.DB) (string, error) {
-	// get user root directory
-	var dir string
-	query := `SELECT directory FROM Users WHERE id = ?`
-	err := db.QueryRow(query, user.ID).Scan(&dir)
-	if err != nil {
-		return "", err
-	}
-	return dir, nil
 }

@@ -217,12 +217,13 @@ function loadContent() {
     function delAccount() {
         console.log("Deleting account...")
 
-        fetch('/api/deleteAccount', {
-            method: "POST",
+        const url = '/api/deleteAccount'
+
+        fetch(url, {
+            method: "DELETE",
             headers: {
                 'Content-Type': "application/json",
             },
-            body: JSON.stringify(userInfo)
         }).then(response => {
             if (!response.ok) {
                 delFileLabel.textContent = "HTTP Error: " + response.statusText;
@@ -963,22 +964,25 @@ function addFolderListener() {
 }
 
 function goBack() {
-    console.log("called")
-    window.history.back();
+    // window.history.back();
+    window.location.href = "/"
+}
+
+function truncateToTwoDecimals(dividend, divisor) {
+    return (dividend / divisor).toFixed(2);
 }
 
 function getStorageUnits(size) {
     // determine where we should display kb, mb or gb for on UI
     // default units retrieved from backend are kb
-    // this function assumes two decimal points of precision
-    size = size.toString()
-    let len = size.length
-    if (len <= 6) {
+
+    let len = (size.toString()).length
+    if (len <= 5) {
       return ["KB", size];
-    }  else if (len > 6 && len <= 9) {
-      size = size / 1000
+    }  else if (len > 5 && len <= 9) {
+        size = truncateToTwoDecimals(size, 1000)
       return ["MB", size]
     }
-    size = size / (1000 * 1000)
+    size = truncateToTwoDecimals(size, 10000)
     return ["GB", size]
 }
