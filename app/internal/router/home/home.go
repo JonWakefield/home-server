@@ -52,7 +52,7 @@ func DeleteFile(path string) error {
 	return nil
 }
 
-func DirExists(path string) bool {
+func Exists(path string) bool {
 	// check if the directory exists
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return false
@@ -64,7 +64,7 @@ func AddDirectory(path, name string) (bool, error) {
 	// add a new directory for the users storage
 	fullPath := path + "/" + name
 
-	if DirExists(fullPath) {
+	if Exists(fullPath) {
 		return true, nil
 	}
 
@@ -91,10 +91,8 @@ func GetFileNames(root, path string) (DirContents, error) {
 		files[entry.Name()] = dir
 	}
 
-	// create return dir:
-	if root == path {
-		fmt.Println("USER IN ROOT PATH")
-	} else {
+	// create back directory
+	if root != path {
 		files[".."] = true
 	}
 
@@ -104,6 +102,18 @@ func GetFileNames(root, path string) (DirContents, error) {
 func SaveFile(c *gin.Context, path string, file *multipart.FileHeader) bool {
 
 	filePath := fmt.Sprintf("%s/%s", path, file.Filename)
+
+	// check if file exists
+	if Exists(filePath) {
+		count := 0
+		for Exists(filePath) {
+			filePath = fmt.Sprintf("%s/%d_%s", path, count, file.Filename)
+			count++
+		}
+	}
+
+	fmt.Println("Final path: ", filePath)
+
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"Message": "Failed to save the file",

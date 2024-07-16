@@ -839,12 +839,9 @@ function isObjectEmpty(obj) {
 function loadFilesDOM(files) {
     // load received files and folderes ono the DOM
 
-    
     let numFiles = 0;
     let svg;
     let rowDiv;
-
-
     Object.keys(files).forEach(key => {
         if (numFiles % FILES_PER_ROW === 0) {
             // put old row div onto dom, store in array
@@ -869,7 +866,14 @@ function loadFilesDOM(files) {
             svg = createFolderIcon()
             fileDiv.classList.add('folder')
         } else {
-            svg = createFileIcon()
+            // check extension:
+            let ext = getExtension(fileName)
+            let type = getExtType(ext)
+            if (type === "image") {
+                svg = createImgIcon()
+            } else {
+                svg = createFileIcon()
+            }
             fileDiv.classList.add('file')
         }
         
@@ -926,15 +930,34 @@ function addFileListener() {
     })
 }
 
+
+function detPrevDir(path) {
+    let end = 0
+    for (let i = path.length - 1; i >= 0; i--) {
+        if (path[i] === "/") {
+            end = i
+            break
+        }
+    }
+    let newPath = path.slice(0, end)
+    console.log("NEW PATH: ", newPath)
+    return newPath
+}
+
+
 function addFolderListener() {
     document.querySelectorAll('.folder').forEach(item => {
         item.addEventListener('dblclick', function() {
-            // TODO do we need to apply a 'selectd-file' label to folder?
 
             let fName = item.querySelector('label').textContent;
             const curParams = getQueryParam("path")
-            let newParam = curParams + "/" + fName
-            window.location.href = `${window.location.pathname}?path=${encodeURIComponent(newParam)}`
+            let newParams;
+            if (fName === "..") {
+                newParams = detPrevDir(curParams)
+            } else {
+                newParams = curParams + "/" + fName
+            }
+            window.location.href = `${window.location.pathname}?path=${encodeURIComponent(newParams)}`
         })
     })
 }
