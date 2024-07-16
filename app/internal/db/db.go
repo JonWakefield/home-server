@@ -85,7 +85,7 @@ func RetrieveUser(db *sql.DB, id int) (models.User, error) {
 
 func GetUserID(db *sql.DB, token string) (int, error) {
 	var userId int
-	query := `SELECT user_id FROM Tokens WHERE expiration > datetime('now')`
+	query := `SELECT user_id FROM Tokens WHERE token = ? AND expiration > datetime('now')`
 	err := db.QueryRow(query, token).Scan(&userId)
 	if err != nil {
 		fmt.Printf("Error validating user: %v", err)

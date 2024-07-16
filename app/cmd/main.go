@@ -56,7 +56,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 		userList := models.RetrieveUsers(db)
 
-		fmt.Println("Retrieved User Info: ")
 		fmt.Println(userList)
 
 		c.JSON(http.StatusOK, gin.H{
@@ -67,6 +66,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 	})
 
 	r.POST("/api/signin", func(c *gin.Context) {
+
 		var user models.User
 		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -76,7 +76,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 		// call function
 		user, err := database.RetrieveUser(db, user.ID)
-		fmt.Println("User: ", user)
 		if err != nil {
 			log.Printf("Encountered an error retrieving user info: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -85,6 +84,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			})
 			return
 		}
+
 		success := user.VerifySignIn(db, sentPassword)
 		if !success {
 			// user provided the wrong password, inform...
@@ -94,27 +94,36 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			})
 			return
 		}
-		// User signed in successfully
-		token, err := utils.GenerateToken()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to generate login token. Login Failed",
-				"login":   false,
-			})
-			return
-		}
-		// store token in db
-		expTime := utils.CalcExpirationTime(TOKEN_LAST_LENGTH)
 
-		err = user.StoreToken(db, token, expTime)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": "Failed to store user token. Login Failed",
-				"login":   false,
-			})
-			return
+		// check if user has a token:
+		userId, valid := auth.VerifyToken(c, db)
+		if !valid || userId != user.ID {
+			fmt.Println("Could not find a token, making a new one")
+			// Create a new token for the user
+			token, err := utils.GenerateToken()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": "Failed to generate login token. Login Failed",
+					"login":   false,
+				})
+				return
+			}
+			// store token in db
+			expTime := utils.CalcExpirationTime(TOKEN_LAST_LENGTH)
+
+			err = user.StoreToken(db, token, expTime)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": "Failed to store user token. Login Failed",
+					"login":   false,
+				})
+				return
+			}
+			c.SetCookie("login-token", token, TOKEN_LAST_LENGTH, "/", "", false, true)
+		} else {
+			fmt.Println("Already found a token!")
 		}
-		c.SetCookie("login-token", token, TOKEN_LAST_LENGTH, "/", "", false, true)
+
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Successfully logged in",
 			"login":   true,
@@ -137,7 +146,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		if !valid {
 			return
 		}
-
 		user, err := database.RetrieveUser(db, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -174,7 +182,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		// retrieve path from query:
 		path := c.Query("path")
 		fullPath := utils.CreateFullPath(user.Directory, path)
-		fmt.Println("Retrieving content for path: ", fullPath)
 
 		// get the content from the users directory, return file names back to user
 		contents, err := home.GetFileNames(user.Directory, fullPath)
@@ -200,7 +207,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		}
 		// retrieve path from query:
 		path := c.Query("path")
-		fmt.Println("Query Path: ", path)
 
 		user, err := database.RetrieveUser(db, userId)
 		if err != nil {
@@ -220,7 +226,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 			return
 		}
 		fullPath := utils.CreateFullPath(user.Directory, path)
-		fmt.Println("full path: ", fullPath)
 		success := home.SaveFile(c, fullPath, file)
 		if !success {
 			return
@@ -237,7 +242,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		sizeConv := utils.UnitConverter(size, BASE_SIZE)
 		user.TotalStorage = sizeConv
 		user.UpdateStorageAmt(db)
-		fmt.Println("Directory total size: ", sizeConv)
 		c.JSON(http.StatusOK, gin.H{
 			"status": "success",
 		})
@@ -318,8 +322,6 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		}
 		path := c.Query("path")
 		fullPath := utils.CreateFullPath(user.Directory, path)
-
-		fmt.Println("Full path to delete: ", fullPath)
 
 		err = home.DeleteFile(fullPath)
 		if err != nil {

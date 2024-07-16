@@ -16,6 +16,13 @@ const filePanelClasses = {
     fileDiv: "file-spacing",
     label: "file-label",
 }
+const userPanelClasses = {
+    a: "list-group-item list-group-item-action py-3 lh-sm",
+    div: "d-flex w-100 align-items-center",
+    small:"text-body-secondary lp",
+    smallStorage: "lp lblue",
+    smallDelete: "lp lred",
+}
 
 const fileIdxNames = {
     dir: 0,
@@ -28,25 +35,31 @@ let rowDiv = document.createElement('div');
 let main = document.getElementById('main');
 let delAcc = false;
 
-
+// --- preview elements ---
 let previewContainer;
 let previewModal;
 
+// --- notification elements
+let banner;
+let closeNotiButton;
+let notiMessage;
+
+// -- user panel ---
+let panelPath = document.createElement('small');
+panelPath.className = userPanelClasses.small;
+
+function updatePanelPath() {
+    let params = getQueryParam("path")
+    panelPath.textContent = "/" + params
+}
 
 function loadContent() {
 
-    const userPanelClasses = {
-        a: "list-group-item list-group-item-action py-3 lh-sm",
-        div: "d-flex w-100 align-items-center",
-        small:"text-body-secondary lp",
-        smallStorage: "lp lblue",
-        smallDelete: "lp lred",
-    }
 
     // --- noti. banner ----
-    const banner = document.getElementById("notification-banner");
-    const closeNotiButton = document.getElementById("close-banner");
-    const notiMessage = document.getElementById("notification-message");
+    banner = document.getElementById("notification-banner");
+    closeNotiButton = document.getElementById("close-banner");
+    notiMessage = document.getElementById("notification-message");
 
     closeNotiButton.addEventListener("click", function() {
         banner.classList.remove("show");
@@ -490,22 +503,17 @@ function loadContent() {
         // create elements
         const panel = document.createElement('a');
         const div= document.createElement('div');
-        const small = document.createElement('small');
 
         // style elements
         panel.className = userPanelClasses.a;
         div.className = userPanelClasses.div;
-        small.className = userPanelClasses.small;
-        
-        // apply user path
-        small.textContent = userInfo.directory; 
 
         // create storage svg
         svg = createCompassSVG();
 
         // assemble onto DOM
         div.appendChild(svg);
-        div.appendChild(small);
+        div.appendChild(panelPath);
         panel.appendChild(div);
 
         return panel
@@ -660,13 +668,15 @@ function getExtension(file) {
         ext = ext + file[i]
     }
     if (ext.length === file.length) {
-        console.log("extension same length as file, must be director!")
         return "dir"
     }
     return ext.split('').reverse().join('');
 }
 
 function getExtType(extension) {
+    if (extension === "dir") {
+        return ""
+    }
     if (imgExtensions.includes(extension)) {
         return "image"
     }
@@ -758,6 +768,7 @@ function fetchDirContent() {
         let files = data.files
         console.log("Content: ", files)
         loadFilesDOM(files)
+        updatePanelPath()
     }).catch(error => {
         console.log("Error: ", error)
     })

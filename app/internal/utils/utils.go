@@ -78,9 +78,12 @@ func DelDir(path string) error {
 }
 
 func CreateFullPath(base, new string) string {
+	// create full path to the user dir
+
+	// remove 'home' from path
 	n := new[4:]
 	if n != "" {
-		return base + "/" + n
+		return base + n
 	}
 	return base
 }
