@@ -321,16 +321,21 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		}
 		path := c.Query("path")
 		fullPath := utils.CreateFullPath(user.Directory, path)
+
+		fmt.Println("Full path to delete: ", fullPath)
+
 		err = home.DeleteFile(fullPath)
 		if err != nil {
 			log.Printf("Failed to Delete file. Error: %v ", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "Failed to Delete file",
+				"success": false,
 			})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Successfully Deleted file",
+			"success": true,
 		})
 	})
 

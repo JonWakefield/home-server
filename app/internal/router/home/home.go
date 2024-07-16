@@ -44,7 +44,8 @@ func RenameFile(path, name, newName string) error {
 }
 
 func DeleteFile(path string) error {
-	err := os.Remove(path)
+
+	err := os.RemoveAll(path)
 	if err != nil {
 		return err
 	}

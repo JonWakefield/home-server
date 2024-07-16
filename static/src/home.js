@@ -1,12 +1,6 @@
 let userInfo;
 let selectedFile = null;
 
-let rows = [];
-let pages = [[]];
-let numItems = [0]; // numItems[i] is the number of items on page i
-let curPage = 0;
-let curRow = 0;
-
 let imgExtensions = [
     "png",
     "jpeg",
@@ -211,11 +205,7 @@ function loadContent() {
                 addFolderErr.style.display = "block";
                 return
             } 
-            addFileToDOM(folderName, "dir");
-
-            addFolderModal.style.display = "none";
-            addFolderInput.value = "";
-            addFolderErr.style.display = "none";
+            window.location.reload();
         }).catch(e => {
             console.error("Error received: ", e)
             notiMessage.textContent = "Error Received: " + e
@@ -260,13 +250,14 @@ function loadContent() {
                 'Content-Type': "application/json",
             }
         }).then(response => {
-            if (!response.ok) {
-                delFileLabel.textContent = "HTTP Error: " + response.statusText;
+            return response.json()
+        }).then(data => {
+            let success = data.success;
+            if (!success) {
+                delFileLabel.textContent = data["message"];
                 delFileLabel.style.display = "block";
                 return;
             }
-            return response.json()
-        }).then(data => {
             deleteFileModal.style.display = "none";
             delError.style.display = "none";
             window.location.reload();
@@ -357,11 +348,7 @@ function loadContent() {
             if (!data) {
                 return
             }
-            // TODO need to update the UI with the renamed file
-            console.log("Response: ", data)
-            renameFileModal.style.display = "none";
-            renameInput.value = "";
-            renameFileDOM(oldName, newName)
+            window.location.reload();
         }).catch(e => {
             console.error("Error received: ", e)
             notiMessage.textContent = "Error Received: " + e
@@ -597,7 +584,7 @@ function loadContent() {
                 }
                 return response.json()
             }).then(data => {
-                addFileToDOM(formData.get("file").name, "file"); // todo update for image icon support
+                window.location.reload();
             }).catch((error) => {
                 console.error("Error: ", error);
                 notiMessage.textContent = "Error Received: " + error
@@ -838,100 +825,32 @@ function createFileLabel()  {
 }
 
 
-function createFileComponents(name, type) {
-    let svg;
-    let fileDiv = createFileDiv();
-    let label = createFileLabel();
-    label.textContent = name;
-    
-    // todo add image icon as an option
-    if (type === "dir") {
-        svg = createFolderIcon()
-        fileDiv.classList.add('folder')
-    } else {
-        svg = createFileIcon()
-    }
-    fileDiv.appendChild(svg);
-    fileDiv.appendChild(label);
-    
-    return fileDiv;
-}
-
 function createRowDiv() {
     let rowDiv = document.createElement('div');
     rowDiv.className = filePanelClasses.rowDiv;
     return rowDiv
 }
 
-function addFileToDOM(name, type) {
-    // append the uploaded file to the DOM
-    let page = pages[curPage];
-    let items = numItems[curPage];
-    let curRow;
-    if (items % FILES_PER_ROW === 0) {
-        console.log("Making a new row...")
-        curRow = createRowDiv();
-        mainPanel.appendChild(curRow); 
-    } else {
-        // use existing row...
-        curRow = page.pop();
-    }
 
-    let fileName = name
-    // todo: need to check if row is full (make a new row then)
-    fileDiv = createFileComponents(fileName, type)
-    curRow.appendChild(fileDiv);
-
-    // put the row back into the pages
-    page.push(curRow);
-
-    // THIS LINE IS UNTEST BUT I BELIEVE IT IS NEEDED
-    pages[curPage] = page
-
-    // TODO we can improve this
-    addFileListeners();
-    addFolderListeners();
-
-    // update number of items
-    numItems[curPage]++;
+function isObjectEmpty(obj) {
+    return Object.entries(obj).length === 0 && obj.constructor === Object;
 }
-
-function renameFileDOM(oldName, newName) {
-    // rename the on the DOM
-    let page = pages[curPage];
-
-    for (const row of page) {
-
-        Array.from(row.children).forEach(file => {
-            let label = file.querySelector('label');
-            if (label.textContent === oldName) {
-                label.textContent = newName
-            }
-        })
-    }
-}
-
 
 function loadFilesDOM(files) {
     // load received files and folderes ono the DOM
 
     
-    let page = pages[curPage];
     let numFiles = 0;
     let svg;
     let rowDiv;
-    let curPageRows;
+
 
     Object.keys(files).forEach(key => {
-        // TODO need to perform a check to ensure I don't display the current folder
-
         if (numFiles % FILES_PER_ROW === 0) {
             // put old row div onto dom, store in array
             if (numFiles != 0) {
                 mainPanel.appendChild(rowDiv);
-                page.push(rowDiv) // added row i to the pages rows
             }
-            
             // create new empty row
             rowDiv = createRowDiv();
         }
@@ -958,21 +877,33 @@ function loadFilesDOM(files) {
         fileDiv.appendChild(label);
         rowDiv.appendChild(fileDiv);
         numFiles++;
-    })
-
+    });
     mainPanel.appendChild(rowDiv);
-    page.push(rowDiv) 
-
-    // THIS LINE IS UNTEST BUT I BELIEVE IT IS NEEDED
-    pages[curPage] = page
-    
-    // store the number of items on the current page
-    numItems[curPage] = numFiles;
-    addFileListeners();
-    addFolderListeners();
+    addSelectedListener();
+    addFileListener();
+    addFolderListener();
 }
 
-function addFileListeners() {
+function addSelectedListener() {
+    document.querySelectorAll('.file-spacing').forEach(item => {
+        item.addEventListener('click', function() {
+            // TODO figure out how to deselect the cur. selected file
+    
+            // remove from previous file
+            if (selectedFile) {
+                selectedFile.classList.remove('selected-file');
+            }
+
+            // add selected file to the item
+            item.classList.add('selected-file');
+            
+            // update reference
+            selectedFile = item;
+        })
+    })
+}
+
+function addFileListener() {
     document.querySelectorAll('.file').forEach(item => {
         item.addEventListener('click', function() {
             // TODO figure out how to deselect the cur. selected file
@@ -995,7 +926,7 @@ function addFileListeners() {
     })
 }
 
-function addFolderListeners() {
+function addFolderListener() {
     document.querySelectorAll('.folder').forEach(item => {
         item.addEventListener('dblclick', function() {
             // TODO do we need to apply a 'selectd-file' label to folder?
