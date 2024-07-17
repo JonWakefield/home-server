@@ -50,6 +50,7 @@ panelPath.className = userPanelClasses.small;
 
 function updatePanelPath() {
     let params = getQueryParam("path")
+    console.log("PATH: ", params);
     panelPath.textContent = "/" + params
 }
 
@@ -614,9 +615,12 @@ function loadContent() {
         }
 
         let fileName = file.querySelector('label').textContent
+        console.log("file name: ", fileName)
         const curParams = getQueryParam("path")
-        const url = `/api/downloadFile?path=${curParams}/${fileName}`
-
+        const encoded = encodeURIComponent(`${curParams}/${fileName}`)
+        console.log("encoded: ", encoded)
+        const url = `/api/downloadFile?path=${encoded}`
+        console.log("URL : ", url)
         fetch(url, {
             method: 'GET',
             headers: {
@@ -894,10 +898,14 @@ function loadFilesDOM(files) {
         rowDiv.appendChild(fileDiv);
         numFiles++;
     });
-    mainPanel.appendChild(rowDiv);
-    addSelectedListener();
-    addFileListener();
-    addFolderListener();
+    try {
+        mainPanel.appendChild(rowDiv);
+        addSelectedListener();
+        addFileListener();
+        addFolderListener();
+    } catch (e) {
+        console.log("No files...")
+    }
 }
 
 function addSelectedListener() {

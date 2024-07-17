@@ -1,7 +1,9 @@
 package home
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -22,8 +24,96 @@ type Folder struct {
 
 type DirContents map[string]bool
 
-func RetrieveFile(c *gin.Context, path string) {
-	c.File(path)
+func ZipFolder(folderPath, zipPath string) error {
+	zipFile, err := os.Create(zipPath)
+	if err != nil {
+		return err
+	}
+	defer zipFile.Close()
+
+	zipWriter := zip.NewWriter(zipFile)
+	defer zipWriter.Close()
+
+	err = filepath.Walk(folderPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Create the zip file header
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
+		}
+
+		header.Name, err = filepath.Rel(filepath.Dir(folderPath), path)
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			header.Name += "/"
+		} else {
+			header.Method = zip.Deflate
+		}
+
+		// Write the header
+		writer, err := zipWriter.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+
+		// If it's a directory, we don't need to write anything more
+		if info.IsDir() {
+			return nil
+		}
+
+		// Open the file to read its contents
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		// Copy the file contents to the zip writer
+		_, err = io.Copy(writer, file)
+		return err
+	})
+
+	return err
+}
+
+func IsFolder(path string) bool {
+	// check if the given path is a folder or file
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	if info.IsDir() {
+		return true
+	}
+	return false
+}
+
+func RetrieveFile(c *gin.Context, path string) error {
+
+	fmt.Println("checking if file or folder")
+	// check if its a file or folder:
+	if IsFolder(path) {
+		// folders
+		zipPath := path + ".zip"
+		fmt.Println("ZIP: ", zipPath)
+		err := ZipFolder(path, zipPath)
+		if err != nil {
+			return err
+		}
+		defer os.Remove(zipPath)
+
+		c.FileAttachment(zipPath, filepath.Base(zipPath))
+	} else {
+		// files
+		c.File(path)
+	}
+	return nil
 }
 
 func RenameFile(path, name, newName string) error {

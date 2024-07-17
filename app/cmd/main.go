@@ -249,6 +249,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 
 	r.GET("/api/downloadFile", func(c *gin.Context) {
 		// verify user token
+		fmt.Println("IN")
 		userId, valid := auth.VerifyToken(c, db)
 		if !valid {
 			return
@@ -264,7 +265,13 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		// retrieve path from query:
 		path := c.Query("path")
 		fullPath := utils.CreateFullPath(user.Directory, path)
-		home.RetrieveFile(c, fullPath)
+		err = home.RetrieveFile(c, fullPath)
+		if err != nil {
+			log.Printf("Failed to download. Error: %v ", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		}
 	})
 
 	r.PATCH("/api/renameFile", func(c *gin.Context) {
