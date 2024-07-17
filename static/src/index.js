@@ -5,8 +5,7 @@ function loadSidebar() {
   const userPanelClasses = {
     a: "list-group-item list-group-item-action py-3 lh-sm",
     div: "d-flex w-100 align-items-center",
-    strong:"mb-1 fs-3 fw-semibold",
-    small:"text-body-secondary storage",
+    strong:"mb-1 fs-2 fw-semibold",
   }
 
   let createAccModal = document.getElementById("createAccModal");
@@ -104,33 +103,25 @@ function loadSidebar() {
     userList.forEach(item => {
         const id = item.id
         const name = item.name
-        const totalStorage = item.total_storage
 
         // create elements
         const panel = document.createElement('a');
         const elementDiv= document.createElement('div');
         const elementStrong = document.createElement('strong');
-        const elementSmall = document.createElement('small');
 
         // style elements
         panel.dataset.accountId = id;
         elementDiv.className = userPanelClasses.div;
         panel.className = userPanelClasses.a;
         elementStrong.className = userPanelClasses.strong;
-        elementSmall.className = userPanelClasses.small;
         
         elementStrong.textContent = name; 
 
-        // display appropriate unit size
-        const [units, size] = getStorageUnits(totalStorage)
-        elementSmall.textContent = `[${size} ${units}]`
-        
         let svg = createSvg()
 
         // assemble onto DOM
         elementDiv.appendChild(svg);
         elementDiv.appendChild(elementStrong);
-        elementDiv.appendChild(elementSmall);
         panel.appendChild(elementDiv);
         userPanel.appendChild(panel);
 
@@ -205,17 +196,18 @@ function loadSidebar() {
           body: JSON.stringify(user)
       })
       .then(response => {
-        if (!response.ok) {
-          createAccError.textContent = "HTTP Error: " + response.statusText
-          createAccError.style.display = "block";
-        }
         return response.json();
       })
       .then(data => {
-          console.log('Success:', data);
-            // IF response comes back SUCCESS (200), reload page
-            window.location.reload()
-            createAccModal.style.display = "none";
+        success = data.success
+        if (!success) {
+          message = data.message
+          createAccError.textContent = message
+          createAccError.style.display = "block";
+          return
+        }
+        window.location.reload()
+        createAccModal.style.display = "none";
       })
       .catch((error) => {
         console.error("Error: ", error)

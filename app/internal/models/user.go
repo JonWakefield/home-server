@@ -46,7 +46,8 @@ func (user *User) checkUserExists(db *sql.DB) (bool, error) {
 }
 
 func (user *User) CreateUser(db *sql.DB) (bool, error) {
-	// note may to return a string (or maybe use error) to inform user if something went wrong (i.e name already exists)
+	// create a new user
+
 	// check to see if user exists
 	userExists, err := user.checkUserExists(db)
 	if err != nil {

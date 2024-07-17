@@ -8,8 +8,19 @@ let imgExtensions = [
     "gif",
 ]
 
-// TODO FIND CORRECT NUMBER
-const FILES_PER_ROW = 4 // may change on screen size? 
+const screenWidth = window.innerWidth;
+let FILES_PER_ROW;
+if (screenWidth >= 1920) {
+    FILES_PER_ROW = 9 
+} else if (screenWidth < 1920 && screenWidth >= 1280) {
+    FILES_PER_ROW = 6
+} else {
+    FILES_PER_ROW = 4
+}
+
+
+console.log("Width: ", screenWidth);
+
 
 const filePanelClasses = {
     rowDiv: "d-flex flex-wrap flex-md-nowrap align-items-center pt-4 pb-2 mb-3 border-bottom",
@@ -555,8 +566,8 @@ function loadContent() {
             }
         }).then(response => {
             if(!response.ok) {
-                notiMessage.textContent = "Failed to retrieve content " + response.statusText
-                banner.classList.add("show");
+                // notiMessage.textContent = "Failed to retrieve content " + response.statusText
+                // banner.classList.add("show");
             }
             return response.json()
         }).then(data => {
@@ -608,7 +619,6 @@ function loadContent() {
         console.log("Downloading...")
         file = selectedFile;
         if (!file) {
-            console.log("No file!")
             notiMessage.textContent = "Please select a file"
             banner.classList.add("show");
             return

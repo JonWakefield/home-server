@@ -35,19 +35,36 @@ func setupRouter(db *sql.DB) *gin.Engine {
 	r.POST("/api/createUser", func(c *gin.Context) {
 		fmt.Println("Hit endpoint...")
 		// can move this to a function
-		var newUser models.User
+		var user models.User
 
-		if err := c.ShouldBindJSON(&newUser); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
 			return
 		}
 		fmt.Println("creating user...")
-		newUser.CreateUser(db)
+		created, err := user.CreateUser(db)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": err.Error(),
+			})
+			return
+		}
+		if !created {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "Username already in use",
+			})
+			return
+		}
 
-		// for now, just respond with the user data
 		c.JSON(http.StatusOK, gin.H{
+			"success": true,
 			"message": "User created successfully",
-			"user":    newUser,
+			"user":    user,
 		})
 	})
 
