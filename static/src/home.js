@@ -15,11 +15,8 @@ if (screenWidth >= 1920) {
 } else if (screenWidth < 1920 && screenWidth >= 1280) {
     FILES_PER_ROW = 6
 } else {
-    FILES_PER_ROW = 4
+    FILES_PER_ROW = 3
 }
-
-
-console.log("Width: ", screenWidth);
 
 
 const filePanelClasses = {
@@ -709,6 +706,7 @@ function showIframe(text) {
     const iframe = document.createElement('iframe');
     iframe.className = 'preview-iframe';
     iframe.src = URL.createObjectURL(text)
+    console.log("Shoing frame...")
     previewContainer.appendChild(iframe);
 }
 

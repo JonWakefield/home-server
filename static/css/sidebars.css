@@ -416,3 +416,85 @@ main {
   overflow: auto;
   background-color: rgba(0, 0, 0, 0.8); /* Black w/ opacity */
 }
+
+.mobile-sidebar {
+  width: 255px;
+}
+
+
+/* Media queries for mobile screens */
+@media (max-width: 850px) {
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .header-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .header-icons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .header-info {
+    display: flex;
+  }
+
+  .header-actions {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin-top: 10px;
+    padding-left: 0px;
+  }
+
+  .header-actions a {
+    margin: 5px 0;
+  }
+
+  .container-fluid {
+    padding: 0px;
+  }
+
+  .mobile-main {
+    display: none;
+    padding: 0px;
+  }
+
+  .b-example-vr {
+    display: none;
+  }
+
+  .mobile-sidebar {
+    width: 100%;
+  }
+
+  #main-sidebar {
+    height: fit-content;
+  }
+
+  .file-spacing {
+    box-sizing: border-box;   
+  }
+
+
+}
