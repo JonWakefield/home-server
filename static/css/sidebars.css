@@ -496,5 +496,29 @@ main {
     box-sizing: border-box;   
   }
 
+  /* modals */
+  .modal {
+    padding: 20px 10px;
+  }
 
+  .modal-dialog {
+    margin: 0;
+    width: 100%;
+    padding-top: 30px;
+  }
+
+  .modal-content {
+    width: 100%;
+  }
+
+  .err-label {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .home-modals {
+    height: 100vh;
+    padding-top: 0;
+  }
 }
