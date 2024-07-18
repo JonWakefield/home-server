@@ -1,7 +1,7 @@
-// change function to export if we incorporate multiple js files
 function loadSidebar() {
 
   let accounts;
+
   const userPanelClasses = {
     a: "list-group-item list-group-item-action py-3 lh-sm",
     div: "d-flex w-100 align-items-center",
@@ -211,7 +211,6 @@ function loadSidebar() {
       })
       .catch((error) => {
         console.error("Error: ", error)
-
       });
   })
 
@@ -286,14 +285,10 @@ function loadSidebar() {
       }
       return response.json();
     }).then(data => {
-      // console.log("Success: ", data);
       accounts = data["user_info"];
-      console.log("users: ", accounts)
       displayUserPanels(accounts);
-      // call function to setup UI
     }).catch(error => {
-      console.log("Error: ", error)
-      // setup error message here
+      console.error("Error: ", error)
     })
   }
   fetchUsers();

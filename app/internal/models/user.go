@@ -9,6 +9,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const BasePath = "/app/users/"
+
 // theses structs are sorta crap,is there is a way to combine these two structs ?
 type User struct {
 	ID           int     `json:"id"`
@@ -18,8 +20,6 @@ type User struct {
 	CreatedAt    string  `json:"created_at"`
 	TotalStorage float64 `json:"total_storage"`
 }
-
-const BasePath = "/app/users/"
 
 func (user *User) hashPassword() (string, error) {
 	// gen hash password

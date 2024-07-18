@@ -8,6 +8,7 @@ let imgExtensions = [
     "gif",
 ]
 
+let isMobile = false;
 const screenWidth = window.innerWidth;
 let FILES_PER_ROW;
 if (screenWidth >= 1920) {
@@ -16,6 +17,7 @@ if (screenWidth >= 1920) {
     FILES_PER_ROW = 6
 } else {
     FILES_PER_ROW = 3
+    isMobile = true;
 }
 
 
@@ -58,7 +60,6 @@ panelPath.className = userPanelClasses.small;
 
 function updatePanelPath() {
     let params = getQueryParam("path")
-    console.log("PATH: ", params);
     panelPath.textContent = "/" + params
 }
 
@@ -237,10 +238,7 @@ function loadContent() {
     })
 
     function delAccount() {
-        console.log("Deleting account...")
-
         const url = '/api/deleteAccount'
-
         fetch(url, {
             method: "DELETE",
             headers: {
@@ -563,17 +561,16 @@ function loadContent() {
             }
         }).then(response => {
             if(!response.ok) {
-                // notiMessage.textContent = "Failed to retrieve content " + response.statusText
-                // banner.classList.add("show");
+                notiMessage.textContent = "Failed to retrieve content " + response.statusText
+                banner.classList.add("show");
             }
             return response.json()
         }).then(data => {
             userInfo = data.user_info
-            console.log("User Info: ", userInfo)
             displayUserInfo();
             setupDelAcc();
         }).catch(error => {
-            console.log("Error: ", error)
+            console.error("Error: ", error)
         })
 
     }
@@ -582,7 +579,6 @@ function loadContent() {
         const files = event.target.files;
         if(files.length > 0) {
             const file = files[0];
-            console.log('File Selected: ', file.name)
     
             const formData = new FormData();
             formData.append('file', file);
@@ -613,7 +609,6 @@ function loadContent() {
 
     // download file button
     function downloadFile() {
-        console.log("Downloading...")
         file = selectedFile;
         if (!file) {
             notiMessage.textContent = "Please select a file"
@@ -622,12 +617,9 @@ function loadContent() {
         }
 
         let fileName = file.querySelector('label').textContent
-        console.log("file name: ", fileName)
         const curParams = getQueryParam("path")
         const encoded = encodeURIComponent(`${curParams}/${fileName}`)
-        console.log("encoded: ", encoded)
         const url = `/api/downloadFile?path=${encoded}`
-        console.log("URL : ", url)
         fetch(url, {
             method: 'GET',
             headers: {
@@ -641,23 +633,9 @@ function loadContent() {
             }
             return response.blob(); 
         }).then(file => {
-            const urlObject = window.URL.createObjectURL(file);
-            const link = document.createElement('a');
-            link.href = urlObject;
-
-            // Extract the file name from the URL
-            const filename = fileName
-            link.download = filename;
-
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // release the object URL
-            window.URL.revokeObjectURL(urlObject);
-
+            triggerDownload(file, fileName)
         }).catch(error => {
-            console.log("Error received: ", error)
+            console.error("Error received: ", error)
         })
     }
 
@@ -706,7 +684,6 @@ function showIframe(text) {
     const iframe = document.createElement('iframe');
     iframe.className = 'preview-iframe';
     iframe.src = URL.createObjectURL(text)
-    console.log("Shoing frame...")
     previewContainer.appendChild(iframe);
 }
 
@@ -741,12 +718,20 @@ function previewFile() {
         }
         return response.blob()
     }).then(blob => {
-        previewContainer.innerHTML = '';
-        previewModal.style.display = "block";
+        
         if (extType === "image") {
+            previewContainer.innerHTML = '';
+            previewModal.style.display = "block";
             showImage(blob)
         } else if (extType === "text") {
-            showIframe(blob)
+            if (isMobile) {
+                // download file instead of displaying
+                triggerDownload(blob, fileName)
+            } else {
+                previewContainer.innerHTML = '';
+                previewModal.style.display = "block";
+                showIframe(blob)
+            }
         }
     }).catch(e => {
         console.error("Error: ", e)
@@ -778,11 +763,10 @@ function fetchDirContent() {
         return response.json()
     }).then(data => {
         let files = data.files
-        console.log("Content: ", files)
         loadFilesDOM(files)
         updatePanelPath()
     }).catch(error => {
-        console.log("Error: ", error)
+        console.error("Error: ", error)
     })
 }
 
@@ -912,14 +896,13 @@ function loadFilesDOM(files) {
         addFileListener();
         addFolderListener();
     } catch (e) {
-        console.log("No files...")
+        console.error("Error received: ", e);
     }
 }
 
 function addSelectedListener() {
     document.querySelectorAll('.file-spacing').forEach(item => {
         item.addEventListener('click', function() {
-            // TODO figure out how to deselect the cur. selected file
     
             // remove from previous file
             if (selectedFile) {
@@ -938,7 +921,6 @@ function addSelectedListener() {
 function addFileListener() {
     document.querySelectorAll('.file').forEach(item => {
         item.addEventListener('click', function() {
-            // TODO figure out how to deselect the cur. selected file
     
             // remove from previous file
             if (selectedFile) {
@@ -968,7 +950,6 @@ function detPrevDir(path) {
         }
     }
     let newPath = path.slice(0, end)
-    console.log("NEW PATH: ", newPath)
     return newPath
 }
 
@@ -991,7 +972,6 @@ function addFolderListener() {
 }
 
 function goBack() {
-    // window.history.back();
     window.location.href = "/"
 }
 
@@ -1012,4 +992,19 @@ function getStorageUnits(size) {
     }
     size = truncateToTwoDecimals(size, 10000)
     return ["GB", size]
+}
+
+function triggerDownload(file, name) {
+    const urlObject = window.URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = urlObject;
+
+    link.download = name
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // release the object URL
+    window.URL.revokeObjectURL(urlObject);
+
 }
