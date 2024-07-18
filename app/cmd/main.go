@@ -17,7 +17,7 @@ import (
 const (
 	TOKEN_LAST_LENGTH = 43_200 // 1 month
 	BASE_SIZE         = 1000   // unit: Kb
-	PATH_TO_HOME_HTML = "/usr/share/nginx/html/static"
+	PATH_TO_HOME_HTML = "/usr/share/nginx/html/static/home.html"
 )
 
 func setupRouter(db *sql.DB) *gin.Engine {
