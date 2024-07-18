@@ -38,6 +38,9 @@ const fileIdxNames = {
     dir: 0,
 }
 
+// --- go back button
+let goBackBut;
+
 // --- main panel ---
 const mainPanel = document.getElementById('main');
 let numFiles = 0;
@@ -78,7 +81,11 @@ function loadContent() {
 
     let deleteAcc;
 
-
+    // go back button
+    goBackBut = document.getElementById("goBackButton")
+    goBackBut.addEventListener('click', () => {
+        goBack();
+    })
 
     // --- download file ---
     let download = document.getElementById("downloadFile");

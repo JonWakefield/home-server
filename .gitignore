@@ -1,3 +1,4 @@
 proxy/logs/*
 static/node_modules/*
 app/users/*
+proxy/*.pem
