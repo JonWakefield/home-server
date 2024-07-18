@@ -351,7 +351,9 @@ function loadContent() {
         // send request to api, renaming selected file
     
         let extension = getExtension(oldName)
-        newName = appendExt(newName, extension)
+        if (extension != "dir") {
+            newName = appendExt(newName, extension)
+        }
 
         const curParams = getQueryParam("path")
         const url = `/api/renameFile?path=${curParams}`
