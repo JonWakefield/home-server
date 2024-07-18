@@ -2,4 +2,3 @@ proxy/logs/*
 static/node_modules/*
 app/users/*
 proxy/conf.d/*.pem
-static/dist/*
