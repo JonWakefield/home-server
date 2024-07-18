@@ -14,8 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const TOKEN_LAST_LENGTH = 43_200 // 1 month
-const BASE_SIZE = 1000           // unit: Kb
+const (
+	TOKEN_LAST_LENGTH = 43_200 // 1 month
+	BASE_SIZE         = 1000   // unit: Kb
+	PATH_TO_HOME_HTML = "/usr/share/nginx/html/static"
+)
 
 func setupRouter(db *sql.DB) *gin.Engine {
 	// disable console color
@@ -154,7 +157,7 @@ func setupRouter(db *sql.DB) *gin.Engine {
 		if !valid {
 			return
 		}
-		c.File("/static/home.html")
+		c.File(PATH_TO_HOME_HTML)
 	})
 
 	r.GET("/api/getUserInfo", func(c *gin.Context) {
