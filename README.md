@@ -2,7 +2,7 @@
 
 ## Description:
 Home server is a intranet cloud storage server capable of hosting & storing private files, securly on a local network all from a Raspberry Pi. 
-This project using a Vanilla JavaScript frontend, a NGINX web server, sqlite database, and a Golang backend used for file storage and retrieveal.
+This project uses a Vanilla JavaScript frontend, a NGINX web server, sqlite database, and a Golang backend used for file storage and retrieveal.
 
 
 ## Features:
@@ -26,8 +26,8 @@ This project using a Vanilla JavaScript frontend, a NGINX web server, sqlite dat
 
 ## Installation
 
-This project is designed to be ran from a Raspberry Pi. However, just about any linux device should work (with some potential minor adjustments) 
-Alternatively the project can be setup using docker. A docker compose file configured for Nginx and Go is provided. Note that the provided docker compose file was used on Desktop Ubuntu, not a Rasberry pi so it is possible some changes may be neccessary.
+- This project is designed to be ran from a Raspberry Pi. However, just about any linux device should work (with some potential minor adjustments)
+- Alternatively the project can be setup using docker. A docker compose file configured for Nginx and Go is provided. Note that the provided docker compose file was used on Desktop Ubuntu, not a Rasberry pi so it is possible some changes may be neccessary.
 
 ### Setup
 
