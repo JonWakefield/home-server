@@ -2,3 +2,5 @@ proxy/logs/*
 static/node_modules/*
 app/users/*
 proxy/conf.d/*.pem
+app/cloud.db
+app/cmd/main
